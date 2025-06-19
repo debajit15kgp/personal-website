@@ -94,13 +94,14 @@
     }
     animateBar();
 
-    // After 2 seconds, show 3D interactive spheres and name
-    setTimeout(() => {
-        // Remove loading content
-        document.getElementById('cat-gif-row').remove();
-        document.getElementById('loading-text').remove();
-        document.getElementById('loading-bar').remove();
+    // Only show loading if not returning from room.html
+    let skipLoading = false;
+    if (window.sessionStorage.getItem('fromRoom') === '1') {
+        skipLoading = true;
+        window.sessionStorage.removeItem('fromRoom');
+    }
 
+    function renderMainScene() {
         // Create container for 3D scene
         const container = document.createElement('div');
         container.id = 'three-container';
@@ -171,7 +172,7 @@
 
         // Three.js setup
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000);
+        scene.background = new THREE.Color(0x000000); // restore to black
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.set(0, 0, 10);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -180,7 +181,7 @@
 
         // Spheres random cluster (no overlap)
         const spheres = [];
-        const sphereCount = 50;
+        const sphereCount = 35;
         const minGap = 0.08; // minimum gap between spheres
         for (let i = 0; i < sphereCount; i++) {
             let tries = 0;
@@ -190,7 +191,7 @@
                 // Random position in a slightly smaller sphere
                 const theta = Math.random() * Math.PI * 2;
                 const phi = Math.acos(2 * Math.random() - 1);
-                const r = 1.7 + Math.random() * 1.1;
+                const r = 1.7 + Math.random() * 2;
                 const x = Math.sin(phi) * Math.cos(theta) * r;
                 const y = Math.sin(phi) * Math.sin(theta) * r * 0.9;
                 const z = Math.cos(phi) * r * 0.7;
@@ -281,6 +282,27 @@
                 sphere.position.add(toHome).add(repulse.multiplyScalar(0.32));
                 sphere.rotation.y += 0.01 + i * 0.002;
             });
+
+            // --- Dynamic separation to prevent merging ---
+            for (let i = 0; i < spheres.length; i++) {
+                for (let j = i + 1; j < spheres.length; j++) {
+                    const a = spheres[i];
+                    const b = spheres[j];
+                    const ra = a.geometry.parameters.radius;
+                    const rb = b.geometry.parameters.radius;
+                    const minDist = ra + rb + minGap;
+                    const delta = b.position.clone().sub(a.position);
+                    const d = delta.length();
+                    if (d < minDist && d > 0.0001) {
+                        // Push each sphere away from the other by half the overlap
+                        const overlap = (minDist - d) / 2;
+                        const push = delta.normalize().multiplyScalar(overlap + 0.001);
+                        b.position.add(push);
+                        a.position.add(push.clone().multiplyScalar(-1));
+                    }
+                }
+            }
+
             renderer.render(scene, camera);
         }
         animateSpheres();
@@ -291,7 +313,454 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-    }, 2000);
+    }
+
+    // Call showMainScene or loading logic
+    if (skipLoading) {
+        document.getElementById('cat-gif-row').remove();
+        document.getElementById('loading-text').remove();
+        document.getElementById('loading-bar').remove();
+        renderMainScene();
+    } else {
+        setTimeout(() => {
+            document.getElementById('cat-gif-row').remove();
+            document.getElementById('loading-text').remove();
+            document.getElementById('loading-bar').remove();
+            renderMainScene();
+        }, 1200);
+    }
+
+    // --- MENU BUTTON & OVERLAY ---
+    // Remove old menuBtn if present (for hot reload)
+    if (document.getElementById('menu-btn')) document.getElementById('menu-btn').remove();
+    if (document.getElementById('menu-overlay')) document.getElementById('menu-overlay').remove();
+    if (document.getElementById('close-btn')) document.getElementById('close-btn').remove();
+
+    // Add hamburger menu button (2 lines)
+    const menuBtn = document.createElement('button');
+    menuBtn.id = 'menu-btn';
+    menuBtn.setAttribute('aria-label', 'Open menu');
+    menuBtn.style.position = 'fixed';
+    menuBtn.style.top = '32px';
+    menuBtn.style.right = '36px';
+    menuBtn.style.width = '48px';
+    menuBtn.style.height = '48px';
+    menuBtn.style.background = 'rgba(0,0,0,0.18)';
+    menuBtn.style.border = 'none';
+    menuBtn.style.borderRadius = '50%';
+    menuBtn.style.display = 'flex';
+    menuBtn.style.flexDirection = 'column';
+    menuBtn.style.justifyContent = 'center';
+    menuBtn.style.alignItems = 'center';
+    menuBtn.style.zIndex = '20';
+    menuBtn.style.cursor = 'pointer';
+    menuBtn.style.transition = 'background 0.2s';
+    menuBtn.onmouseenter = () => menuBtn.style.background = 'rgba(255,224,102,0.12)';
+    menuBtn.onmouseleave = () => menuBtn.style.background = 'rgba(0,0,0,0.18)';
+    // Two animated lines
+    const line1 = document.createElement('div');
+    const line2 = document.createElement('div');
+    [line1, line2].forEach(line => {
+        line.style.width = '26px';
+        line.style.height = '4px';
+        line.style.background = '#ffe066';
+        line.style.margin = '4px 0';
+        line.style.borderRadius = '2px';
+        line.style.transition = 'all 0.45s cubic-bezier(.77,0,.18,1)';
+    });
+    menuBtn.appendChild(line1);
+    menuBtn.appendChild(line2);
+    document.body.appendChild(menuBtn);
+
+    // Menu overlay
+    const menuOverlay = document.createElement('div');
+    menuOverlay.id = 'menu-overlay';
+    menuOverlay.style.position = 'fixed';
+    menuOverlay.style.top = '0';
+    menuOverlay.style.left = '0';
+    menuOverlay.style.width = '100vw';
+    menuOverlay.style.height = '100vh';
+    menuOverlay.style.background = 'linear-gradient(135deg, #000 0%, #1a1a1a 100%)';
+    menuOverlay.style.display = 'none';
+    menuOverlay.style.flexDirection = 'column';
+    menuOverlay.style.justifyContent = 'center';
+    menuOverlay.style.alignItems = 'center';
+    menuOverlay.style.zIndex = '30';
+    menuOverlay.style.transition = 'opacity 0.4s';
+    document.body.appendChild(menuOverlay);
+
+    // Cross (close) button
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'close-btn';
+    closeBtn.setAttribute('aria-label', 'Close menu');
+    closeBtn.style.position = 'fixed';
+    closeBtn.style.top = '32px';
+    closeBtn.style.right = '36px';
+    closeBtn.style.width = '48px';
+    closeBtn.style.height = '48px';
+    closeBtn.style.background = 'rgba(0,0,0,0.18)';
+    closeBtn.style.border = 'none';
+    closeBtn.style.borderRadius = '50%';
+    closeBtn.style.display = 'flex';
+    closeBtn.style.justifyContent = 'center';
+    closeBtn.style.alignItems = 'center';
+    closeBtn.style.zIndex = '40';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.transition = 'background 0.2s';
+    closeBtn.style.display = 'none';
+    closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(255,224,102,0.12)';
+    closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(0,0,0,0.18)';
+    // Cross icon
+    const cross = document.createElement('div');
+    cross.style.width = '26px';
+    cross.style.height = '26px';
+    cross.style.position = 'relative';
+    for (let i = 0; i < 2; i++) {
+        const bar = document.createElement('div');
+        bar.style.position = 'absolute';
+        bar.style.width = '100%';
+        bar.style.height = '3.5px';
+        bar.style.background = '#ffe066';
+        bar.style.top = '50%';
+        bar.style.left = '0';
+        bar.style.transform = i === 0 ? 'rotate(45deg) translateY(-50%)' : 'rotate(-45deg) translateY(-50%)';
+        bar.style.borderRadius = '2px';
+        cross.appendChild(bar);
+    }
+    closeBtn.appendChild(cross);
+    document.body.appendChild(closeBtn);
+
+    // Menu box layout - 5 large, irregular rectangles filling the screen
+    const menuNames = ['home', 'cv', 'projects', 'about', 'contact'];
+    // Shuffle menuNames for random order
+    for (let i = menuNames.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [menuNames[i], menuNames[j]] = [menuNames[j], menuNames[i]];
+    }
+    // Irregular grid: 2 rows, 3 cols (last cell spans 2 cols)
+    const menuGrid = document.createElement('div');
+    menuGrid.style.display = 'grid';
+    menuGrid.style.gridTemplateRows = '1fr 1fr';
+    menuGrid.style.gridTemplateColumns = '1.2fr 1fr 1.3fr';
+    menuGrid.style.gap = '2vw 2vh';
+    menuGrid.style.width = '100vw';
+    menuGrid.style.height = '100vh';
+    menuGrid.style.padding = '6vh 5vw';
+    menuOverlay.appendChild(menuGrid);
+    // Box styles
+    const boxStyles = [
+        // row, col, rowSpan, colSpan, alignSelf, justifySelf
+        [1, 1, 1, 1, 'start', 'start'],
+        [1, 2, 1, 1, 'end', 'center'],
+        [1, 3, 2, 1, 'center', 'end'],
+        [2, 1, 1, 2, 'center', 'center'],
+        [2, 2, 1, 1, 'end', 'end'],
+    ];
+    for (let i = 0; i < 5; i++) {
+        const box = document.createElement('div');
+        box.style.gridRow = `${boxStyles[i][0]} / span ${boxStyles[i][2]}`;
+        box.style.gridColumn = `${boxStyles[i][1]} / span ${boxStyles[i][3]}`;
+        box.style.alignSelf = boxStyles[i][4];
+        box.style.justifySelf = boxStyles[i][5];
+        box.style.width = `min(100%, 38vw)`;
+        box.style.height = `min(100%, 32vh)`;
+        box.style.background = i % 2 === 0 ? 'rgba(255,224,102,0.93)' : 'rgba(255,255,255,0.93)';
+        box.style.borderRadius = '22px';
+        box.style.boxShadow = '0 8px 48px #0002';
+        box.style.position = 'relative';
+        // Small text in a corner/edge
+        const label = document.createElement('span');
+        label.textContent = menuNames[i];
+        label.style.position = 'absolute';
+        label.style.fontFamily = 'Gateway, Inter, sans-serif';
+        label.style.fontWeight = 'bold';
+        label.style.fontSize = '1.1em';
+        label.style.letterSpacing = '0.08em';
+        label.style.textTransform = 'uppercase';
+        label.style.color = '#222';
+        label.style.opacity = '0.85';
+        label.style.padding = '18px 24px';
+        // Place label in a random corner/edge
+        const labelPos = [
+            ['top', 'left'], ['top', 'right'], ['bottom', 'left'], ['bottom', 'right'], ['top', 'center'], ['bottom', 'center']
+        ];
+        const pos = labelPos[Math.floor(Math.random() * labelPos.length)];
+        if (pos[0] === 'top') label.style.top = '0';
+        if (pos[0] === 'bottom') label.style.bottom = '0';
+        if (pos[1] === 'left') label.style.left = '0';
+        if (pos[1] === 'right') label.style.right = '0';
+        if (pos[1] === 'center') {
+            label.style.left = '50%';
+            label.style.transform = 'translateX(-50%)';
+        }
+        box.appendChild(label);
+        menuGrid.appendChild(box);
+    }
+
+    // --- Menu button animation logic ---
+    function animateMenuBtnOut(cb) {
+        // Animate lines to collide and fade out
+        line1.style.transform = 'translateY(8px)';
+        line2.style.transform = 'translateY(-8px)';
+        setTimeout(() => {
+            line1.style.opacity = '0';
+            line2.style.opacity = '0';
+            setTimeout(cb, 350);
+        }, 250);
+    }
+    function resetMenuBtn() {
+        line1.style.transform = '';
+        line2.style.transform = '';
+        line1.style.opacity = '1';
+        line2.style.opacity = '1';
+    }
+
+    // Open/close menu logic
+    menuBtn.onclick = () => {
+        animateMenuBtnOut(() => {
+            menuOverlay.style.display = 'flex';
+            setTimeout(() => menuOverlay.style.opacity = '1', 10);
+            menuBtn.style.display = 'none';
+            closeBtn.style.display = 'flex';
+        });
+    };
+    closeBtn.onclick = () => {
+        menuOverlay.style.opacity = '0';
+        setTimeout(() => menuOverlay.style.display = 'none', 400);
+        menuBtn.style.display = 'flex';
+        closeBtn.style.display = 'none';
+        resetMenuBtn();
+    };
+    // Responsive: hide overlay on resize if needed
+    window.addEventListener('resize', () => {
+        if (menuOverlay.style.display === 'flex') {
+            menuOverlay.style.width = '100vw';
+            menuOverlay.style.height = '100vh';
+        }
+    });
+
+    // --- SHOOTING STAR CURSOR TRAIL ---
+    let starTrail = [];
+    const trailCanvas = document.createElement('canvas');
+    trailCanvas.style.position = 'fixed';
+    trailCanvas.style.top = '0';
+    trailCanvas.style.left = '0';
+    trailCanvas.style.width = '100vw';
+    trailCanvas.style.height = '100vh';
+    trailCanvas.style.pointerEvents = 'none';
+    trailCanvas.style.zIndex = '15';
+    trailCanvas.width = window.innerWidth;
+    trailCanvas.height = window.innerHeight;
+    document.body.appendChild(trailCanvas);
+    window.addEventListener('resize', () => {
+        trailCanvas.width = window.innerWidth;
+        trailCanvas.height = window.innerHeight;
+    });
+    document.addEventListener('mousemove', (e) => {
+        starTrail.push({
+            x: e.clientX,
+            y: e.clientY,
+            t: performance.now()
+        });
+    });
+    function drawTrail() {
+        const ctx = trailCanvas.getContext('2d');
+        ctx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
+        const now = performance.now();
+        // Only keep recent points (last 220ms)
+        starTrail = starTrail.filter(p => now - p.t < 220);
+        for (let i = 0; i < starTrail.length - 1; i++) {
+            const p1 = starTrail[i];
+            const p2 = starTrail[i + 1];
+            const age = (now - p1.t) / 220;
+            ctx.strokeStyle = `rgba(255,224,102,${1 - age})`;
+            ctx.lineWidth = 3.5 * (1 - age) + 1.2;
+            ctx.shadowColor = '#ffe066';
+            ctx.shadowBlur = 12 * (1 - age);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        }
+        requestAnimationFrame(drawTrail);
+    }
+    drawTrail();
+
+    // --- DIVE IN BUTTON ---
+    const diveBtn = document.createElement('button');
+    diveBtn.textContent = 'Dive In';
+    diveBtn.style.position = 'fixed';
+    diveBtn.style.top = 'calc(50% + 7.2em)';
+    diveBtn.style.left = '50%';
+    diveBtn.style.transform = 'translate(-50%, 0)';
+    diveBtn.style.background = 'linear-gradient(90deg, #ffe066 60%, #fffbe6 100%)';
+    diveBtn.style.color = '#222';
+    diveBtn.style.fontFamily = 'Gateway, Inter, sans-serif';
+    diveBtn.style.fontWeight = 'bold';
+    diveBtn.style.fontSize = '2.2em';
+    diveBtn.style.letterSpacing = '0.08em';
+    diveBtn.style.padding = '0.6em 2.2em';
+    diveBtn.style.border = 'none';
+    diveBtn.style.borderRadius = '1.6em';
+    diveBtn.style.boxShadow = '0 8px 48px #ffe06644, 0 2px 8px #0002';
+    diveBtn.style.cursor = 'pointer';
+    diveBtn.style.zIndex = '12';
+    diveBtn.style.transition = 'transform 0.18s, box-shadow 0.18s, background 0.18s';
+    diveBtn.onmouseenter = () => {
+        diveBtn.style.transform = 'translate(-50%, 0) scale(1.06)';
+        diveBtn.style.boxShadow = '0 12px 64px #ffe06677, 0 2px 8px #0002';
+    };
+    diveBtn.onmouseleave = () => {
+        diveBtn.style.transform = 'translate(-50%, 0) scale(1)';
+        diveBtn.style.boxShadow = '0 8px 48px #ffe06644, 0 2px 8px #0002';
+    };
+    document.body.appendChild(diveBtn);
+
+    // --- DIVE IN TRANSITION & IMMERSIVE ROOM ---
+    diveBtn.onclick = () => {
+        // Animate zoom into button
+        diveBtn.style.transition = 'transform 0.7s cubic-bezier(.77,0,.18,1), box-shadow 0.7s cubic-bezier(.77,0,.18,1), background 0.7s';
+        diveBtn.style.transform = 'translate(-50%, 0) scale(18)';
+        diveBtn.style.boxShadow = '0 0 0 #ffe06600';
+        diveBtn.style.background = '#ffe066';
+        diveBtn.style.color = 'transparent';
+        setTimeout(() => {
+            window.location.href = 'room.html';
+        }, 700);
+    };
+
+    // --- IMMERSIVE ROOM SCENE ---
+    function showImmersiveRoom() {
+        // Container
+        const roomContainer = document.createElement('div');
+        roomContainer.id = 'room-container';
+        roomContainer.style.position = 'fixed';
+        roomContainer.style.top = '0';
+        roomContainer.style.left = '0';
+        roomContainer.style.width = '100vw';
+        roomContainer.style.height = '100vh';
+        roomContainer.style.zIndex = '1';
+        document.body.appendChild(roomContainer);
+
+        // Three.js setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xeaeaea); // light gray for contrast
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 2.2, 7.5);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        roomContainer.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambient);
+        const spot = new THREE.SpotLight(0xffffff, 1.2, 30, Math.PI/5, 0.4, 1.2);
+        spot.position.set(0, 8, 6);
+        spot.target.position.set(0, 0, 0);
+        scene.add(spot);
+        scene.add(spot.target);
+        const fill = new THREE.PointLight(0xffe066, 0.5, 20);
+        fill.position.set(-4, 3, 6);
+        scene.add(fill);
+
+        // Floor
+        const floorGeo = new THREE.PlaneGeometry(16, 16);
+        const floorMat = new THREE.MeshPhysicalMaterial({ color: 0xd6d6d6, roughness: 0.38, metalness: 0.1 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI/2;
+        floor.position.y = -0.01;
+        scene.add(floor);
+
+        // Table
+        const tableGeo = new THREE.BoxGeometry(5.2, 0.32, 2.8);
+        const tableMat = new THREE.MeshPhysicalMaterial({ color: 0xe0c97f, roughness: 0.22, metalness: 0.18 });
+        const table = new THREE.Mesh(tableGeo, tableMat);
+        table.position.set(0, 0.6, 0);
+        scene.add(table);
+        // Table legs
+        for (let dx of [-1.7, 1.7]) {
+            for (let dz of [-0.8, 0.8]) {
+                const leg = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.09, 0.09, 0.7, 24),
+                    new THREE.MeshPhysicalMaterial({ color: 0xe0d6b6, roughness: 0.3, metalness: 0.1 })
+                );
+                leg.position.set(dx, 0.25, dz);
+                scene.add(leg);
+            }
+        }
+
+        // Books (blog)
+        for (let i = 0; i < 3; i++) {
+            const bookGeo = new THREE.BoxGeometry(0.68, 0.18, 0.9 + 0.22 * i);
+            const bookMat = new THREE.MeshPhysicalMaterial({ color: [0xffe066, 0xf8f6ff, 0x222222][i], roughness: 0.18, metalness: 0.18 });
+            const book = new THREE.Mesh(bookGeo, bookMat);
+            book.position.set(-1.1 + i * 0.9, 0.85, 0.3 + 0.13 * i);
+            book.userData.type = 'blog';
+            scene.add(book);
+        }
+        // Resume (cv)
+        const cvGeo = new THREE.BoxGeometry(1.1, 0.06, 1.5);
+        const cvMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.13, metalness: 0.12 });
+        const cv = new THREE.Mesh(cvGeo, cvMat);
+        cv.position.set(1.7, 0.85, -0.2);
+        cv.userData.type = 'cv';
+        scene.add(cv);
+        // Telephone (contact)
+        const phoneGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.48, 32);
+        const phoneMat = new THREE.MeshPhysicalMaterial({ color: 0x222222, roughness: 0.22, metalness: 0.7 });
+        const phone = new THREE.Mesh(phoneGeo, phoneMat);
+        phone.position.set(-1.9, 0.85, -0.5);
+        phone.userData.type = 'contact';
+        scene.add(phone);
+        // Phone receiver
+        const receiverGeo = new THREE.TorusGeometry(0.25, 0.08, 16, 32, Math.PI);
+        const receiverMat = new THREE.MeshPhysicalMaterial({ color: 0x222222, roughness: 0.18, metalness: 0.7 });
+        const receiver = new THREE.Mesh(receiverGeo, receiverMat);
+        receiver.position.set(-1.9, 1.05, -0.5);
+        receiver.rotation.x = Math.PI/2.1;
+        scene.add(receiver);
+
+        // Interactivity: raycaster
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hovered = null;
+        renderer.domElement.addEventListener('mousemove', (event) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        });
+        renderer.domElement.addEventListener('click', (event) => {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects([cv, phone, receiver, ...scene.children.filter(o => o.userData.type === 'blog')]);
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (obj.userData.type === 'blog') {
+                    alert('Open Blog!');
+                } else if (obj.userData.type === 'cv') {
+                    alert('Open CV!');
+                } else if (obj.userData.type === 'contact') {
+                    alert('Open Contact!');
+                }
+            }
+        });
+
+        // Animate
+        function animateRoom() {
+            requestAnimationFrame(animateRoom);
+            // Subtle floating for objects
+            for (let obj of [cv, phone, receiver, ...scene.children.filter(o => o.userData.type === 'blog')]) {
+                obj.position.y += Math.sin(performance.now() * 0.001 + obj.position.x) * 0.0007;
+            }
+            renderer.render(scene, camera);
+        }
+        animateRoom();
+        // Responsive
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
     </script>
 </body>
 </html>

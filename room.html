@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debajit's Room</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #181818 0%, #232323 100%);
+            min-height: 100vh;
+        }
+        #back-btn {
+            position: fixed;
+            top: 32px;
+            left: 36px;
+            width: 54px;
+            height: 54px;
+            background: rgba(0,0,0,0.18);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #back-btn:hover {
+            background: rgba(255,224,102,0.12);
+        }
+        #back-btn span {
+            display: block;
+            width: 28px;
+            height: 28px;
+            border-left: 4px solid #ffe066;
+            border-bottom: 4px solid #ffe066;
+            transform: rotate(45deg);
+            margin-left: 8px;
+        }
+        #three-room {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-btn" aria-label="Back to main">
+        <span></span>
+    </button>
+    <div id="three-room"></div>
+    <script>
+    document.getElementById('back-btn').onclick = () => {
+        window.sessionStorage.setItem('fromRoom', '1');
+        window.location.href = 'index.html';
+    };
+    // Three.js setup
+    const container = document.getElementById('three-room');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x181818);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(2.5, 5.5, 6.5); // angled 3D view
+    camera.lookAt(0, 0.7, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+    // Lighting
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambient);
+    const spot = new THREE.SpotLight(0xffffff, 1.2, 30, Math.PI/5, 0.4, 1.2);
+    spot.position.set(0, 8, 6);
+    spot.target.position.set(0, 0, 0);
+    scene.add(spot);
+    scene.add(spot.target);
+    const fill = new THREE.PointLight(0xffe066, 0.5, 20);
+    fill.position.set(-4, 3, 6);
+    scene.add(fill);
+    // Floor
+    const floorGeo = new THREE.PlaneGeometry(16, 16);
+    const floorMat = new THREE.MeshPhysicalMaterial({ color: 0x232323, roughness: 0.38, metalness: 0.1 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI/2;
+    floor.position.y = -0.01;
+    scene.add(floor);
+    // Table
+    const tableGeo = new THREE.BoxGeometry(5.2, 0.32, 2.8);
+    const tableMat = new THREE.MeshPhysicalMaterial({ color: 0xe0c97f, roughness: 0.22, metalness: 0.18 });
+    const table = new THREE.Mesh(tableGeo, tableMat);
+    table.position.set(0, 0.6, 0);
+    scene.add(table);
+    // Table legs
+    for (let dx of [-1.7, 1.7]) {
+        for (let dz of [-0.8, 0.8]) {
+            const leg = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.09, 0.09, 0.7, 24),
+                new THREE.MeshPhysicalMaterial({ color: 0x9c8a5a, roughness: 0.3, metalness: 0.1 })
+            );
+            leg.position.set(dx, 0.25, dz);
+            scene.add(leg);
+        }
+    }
+    // Books (blog) - stacked column, clickable
+    const bookColors = [0xffe066, 0xf8f6ff, 0x222222, 0x8ecae6, 0xf4978e];
+    const books = [];
+    for (let i = 0; i < 5; i++) {
+        const bookGeo = new THREE.BoxGeometry(0.7, 0.16, 1.1);
+        const bookMat = new THREE.MeshPhysicalMaterial({ color: bookColors[i % bookColors.length], roughness: 0.18, metalness: 0.18 });
+        const book = new THREE.Mesh(bookGeo, bookMat);
+        // Stack books in a column (y increases)
+        book.position.set(-1.2, 0.78 + i * 0.18, 0.2);
+        book.rotation.y = Math.PI * 0.04 * (i - 2);
+        book.userData.type = 'blog';
+        scene.add(book);
+        books.push(book);
+        // Add label (simple 3D text substitute)
+        const canvas = document.createElement('canvas');
+        canvas.width = 128; canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#222';
+        ctx.font = 'bold 22px Inter';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Blog', 64, 16);
+        const tex = new THREE.CanvasTexture(canvas);
+        const labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+        const labelGeo = new THREE.PlaneGeometry(0.7, 0.18);
+        const label = new THREE.Mesh(labelGeo, labelMat);
+        label.position.set(0, 0.09, 0.3);
+        label.rotation.x = -Math.PI/2.2;
+        book.add(label);
+    }
+    // Interactivity: raycaster for books
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredBook = null;
+    renderer.domElement.addEventListener('mousemove', (event) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    });
+    renderer.domElement.addEventListener('click', (event) => {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(books);
+        if (intersects.length > 0) {
+            window.location.href = 'blog.html';
+        }
+    });
+    // Animate
+    function animateRoom() {
+        requestAnimationFrame(animateRoom);
+        // Highlight hovered book
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(books);
+        if (hoveredBook) hoveredBook.material.emissive = new THREE.Color(0x000000);
+        if (intersects.length > 0) {
+            hoveredBook = intersects[0].object;
+            hoveredBook.material.emissive = new THREE.Color(0xffe066);
+        } else {
+            hoveredBook = null;
+        }
+        renderer.render(scene, camera);
+    }
+    animateRoom();
+    // Responsive
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    </script>
+</body>
+</html> 

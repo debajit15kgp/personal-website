@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - Debajit</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #fff;
+            color: #232323;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+        #back-btn {
+            position: fixed;
+            top: 8px;
+            left: 22px;
+            width: 36px;
+            height: 36px;
+            background: none;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        #back-btn:hover {
+            background: #ececec;
+        }
+        #back-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: #232323;
+            stroke-width: 2.5;
+            fill: none;
+        }
+        .notes-app {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            margin-top: 0;
+        }
+        .notes-list {
+            width: 320px;
+            background: #faf9f6;
+            border-right: 1.5px solid #ececec;
+            padding: 56px 0 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+            box-shadow: 2px 0 16px #0001;
+        }
+        .note-title {
+            padding: 1.1em 2em 1.1em 2.5em;
+            font-size: 1.13em;
+            font-weight: 500;
+            color: #232323;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            border-left: 3.5px solid transparent;
+            border-radius: 0 2em 2em 0;
+            transition: background 0.18s, border-color 0.18s, color 0.18s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .note-title .note-date {
+            font-size: 0.93em;
+            color: #aaa;
+            margin-top: 0.18em;
+            margin-left: 0.1em;
+            font-weight: 400;
+        }
+        .note-title.selected {
+            background: #232323;
+            color: #fff;
+            border-left: 3.5px solid #232323;
+            box-shadow: 0 2px 16px #0001;
+            border-radius: 1.2em;
+        }
+        .note-title.selected .note-date {
+            color: #bbb;
+        }
+        .note-title:hover:not(.selected) {
+            background: #ececec;
+            border-left: 3.5px solid #232323;
+        }
+        .note-content {
+            flex: 1;
+            padding: 64px 6vw 32px 4vw;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .note-content h2 {
+            font-family: 'Gateway', Inter, sans-serif;
+            font-size: 2.1em;
+            color: #232323;
+            margin-bottom: 0.3em;
+            font-weight: 700;
+        }
+        .note-content .note-date {
+            font-size: 1.05em;
+            color: #aaa;
+            margin-bottom: 1.2em;
+            margin-top: -0.5em;
+            font-weight: 400;
+        }
+        .note-content p {
+            font-size: 1.18em;
+            color: #444;
+            line-height: 1.7;
+            margin-top: 0.7em;
+        }
+        @media (max-width: 700px) {
+            .notes-list { width: 100px; }
+            .note-title { font-size: 0.98em; padding-left: 1em; }
+            .note-content { padding: 32px 2vw 16px 2vw; }
+        }
+        .notes-list.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            overflow: hidden;
+            border-right: none;
+        }
+        #toggle-notes-list {
+            background: none;
+            border: none;
+            padding: 0.7em 0 0.7em 2.5em;
+            text-align: left;
+            font-size: 1.08em;
+            color: #232323;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        #toggle-arrow {
+            transition: transform 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <button id="back-btn" aria-label="Back to room">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="notes-app">
+        <div style="display:flex;flex-direction:column;width:320px;">
+            <button id="toggle-notes-list">
+                <svg id="toggle-arrow" width="18" height="18" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="#232323" stroke-width="2.2" fill="none"/></svg>
+                <span style="font-weight:600;letter-spacing:0.04em;">Notes</span>
+            </button>
+            <div class="notes-list" id="notes-list">
+                <!-- Note titles will be injected here -->
+            </div>
+        </div>
+        <div class="note-content" id="note-content">
+            <!-- Note content will be injected here -->
+        </div>
+    </div>
+    <script>
+    document.getElementById('back-btn').onclick = () => {
+        window.location.href = 'room.html';
+    };
+    // Simulate loading notes from a folder (blogs/). Each note is a JSON file with title, date, content.
+    async function loadNotes() {
+        // For now, simulate with two placeholder notes
+        // In real use, fetch('blogs/note1.json') etc.
+        return [
+            {
+                title: 'How I built this site',
+                date: '2024-07-08',
+                content: `<h2>How I built this site</h2><div class='note-date'>2024-07-08</div><p>This is a placeholder note describing the process and technologies used to build this interactive 3D website. It uses Three.js, custom CSS, and a lot of creativity!</p>`
+            },
+            {
+                title: 'My favorite productivity hacks',
+                date: '2024-07-07',
+                content: `<h2>My favorite productivity hacks</h2><div class='note-date'>2024-07-07</div><p>Here are some placeholder tips: use keyboard shortcuts, batch your tasks, and take regular breaks to stay sharp and creative.</p>`
+            }
+        ];
+    }
+    const notesList = document.getElementById('notes-list');
+    const noteContent = document.getElementById('note-content');
+    let notes = [];
+    let selectedIdx = 0;
+    async function renderNotes(idx = 0) {
+        if (notes.length === 0) notes = await loadNotes();
+        selectedIdx = idx;
+        notesList.innerHTML = '';
+        notes.forEach((note, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'note-title' + (i === selectedIdx ? ' selected' : '');
+            btn.setAttribute('data-note', i);
+            btn.innerHTML = `${note.title}<span class='note-date'>${note.date}</span>`;
+            btn.onclick = () => renderNotes(i);
+            notesList.appendChild(btn);
+        });
+        noteContent.innerHTML = notes[selectedIdx].content;
+    }
+    renderNotes();
+    // Collapsible notes list
+    let notesListCollapsed = false;
+    const toggleBtn = document.getElementById('toggle-notes-list');
+    const toggleArrow = document.getElementById('toggle-arrow');
+    toggleBtn.onclick = () => {
+        notesListCollapsed = !notesListCollapsed;
+        notesList.classList.toggle('collapsed', notesListCollapsed);
+        toggleArrow.style.transform = notesListCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+    };
+    </script>
+</body>
+</html> 
