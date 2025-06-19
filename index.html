@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Interactive 3D Website</title>
+    <title>Debajit's Interactive 3D Website</title>
+    <link rel="icon" type="image/png" href="icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
-            overflow: hidden; /* Hide scrollbars */
-            font-family: 'Inter', sans-serif; /* Use Inter font */
-            background-color: #1a202c; /* Dark background */
-            color: #e2e8f0; /* Light text color */
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh; /* Ensure full viewport height */
+            min-height: 100vh;
         }
         canvas {
-            display: block; /* Remove extra space below canvas */
-            width: 100vw; /* Take full viewport width */
-            height: calc(100vh - 80px); /* Adjust height for header/footer if any, or full height */
-            background-color: transparent; /* Let body background show through */
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background-color: transparent;
         }
         #loading-overlay {
             position: absolute;
@@ -30,26 +31,34 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: transparent;
             color: white;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 2em;
             z-index: 1000;
+            transition: opacity 1s ease-in-out;
+        }
+        .loading-text {
+            position: absolute;
+            top: 20px;
+            font-size: 1.5em;
+            font-weight: 300;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
         .message-box {
             position: fixed;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #4a5568; /* Darker gray */
-            color: #cbd5e0; /* Lighter gray */
+            background-color: rgba(74, 85, 104, 0.9);
+            color: #cbd5e0;
             padding: 15px 30px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             z-index: 1001;
-            display: none; /* Hidden by default */
+            display: none;
             animation: fadeInOut 4s forwards;
         }
 
@@ -61,114 +70,228 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body id="main-body" style="background: #000; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <div id="cat-gif-row" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-end; gap: 32px; margin-bottom: 36px;">
+        <img src="cat.gif" alt="Cat 1" style="max-width: 200px; max-height: 200px; border-radius: 16px;" />
+        <img src="cat1.gif" alt="Cat 2" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
+        <img src="cat2.gif" alt="Cat 3" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
+    </div>
+    <div id="loading-text" style="color: #fff; font-size: 1.5em; font-weight: bold; letter-spacing: 0.1em; margin-bottom: 18px;">Loading…</div>
+    <div id="loading-bar" style="width: 220px; height: 10px; background: #222; border-radius: 6px; overflow: hidden;">
+        <div id="loading-bar-inner" style="height:100%;width:0%;background:#ffe066;transition:width 0.3s;border-radius:6px;"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+    <script>
+    // Animate the loading bar
+    function animateBar() {
+        const bar = document.getElementById('loading-bar-inner');
+        if (bar) {
+            const t = (performance.now() * 0.001) % 2;
+            const percent = t < 1 ? t : 2 - t;
+            bar.style.width = (percent * 100) + '%';
+        }
+        requestAnimationFrame(animateBar);
+    }
+    animateBar();
 
-    <div id="loading-overlay">Loading 3D Experience...</div>
-    <div id="message-box" class="message-box"></div>
+    // After 2 seconds, show 3D interactive spheres and name
+    setTimeout(() => {
+        // Remove loading content
+        document.getElementById('cat-gif-row').remove();
+        document.getElementById('loading-text').remove();
+        document.getElementById('loading-bar').remove();
 
-    <script type="module">
-        // Import necessary Three.js components from CDN
-        // Using 'module' type to allow ES module imports directly in the browser
-        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
-        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+        // Create container for 3D scene
+        const container = document.createElement('div');
+        container.id = 'three-container';
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100vw';
+        container.style.height = '100vh';
+        container.style.zIndex = '1';
+        document.body.appendChild(container);
 
-        let scene, camera, renderer, cube, controls;
-        let loadingOverlay = document.getElementById('loading-overlay');
-        let messageBox = document.getElementById('message-box');
+        // Add name in yellow, centered in the foreground
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = "DEBAJIT";
+        nameDiv.style.position = 'fixed';
+        nameDiv.style.top = '50%';
+        nameDiv.style.left = '50%';
+        nameDiv.style.transform = 'translate(-50%, -50%)';
+        nameDiv.style.color = '#ffe066';
+        nameDiv.style.fontSize = '5em';
+        nameDiv.style.fontWeight = 'bold';
+        nameDiv.style.letterSpacing = '0.12em';
+        nameDiv.style.textShadow = '0 2px 32px #000a, 0 0px 2px #ffe06699';
+        nameDiv.style.zIndex = '10';
+        nameDiv.style.fontFamily = 'Gateway, sans-serif';
+        nameDiv.style.pointerEvents = 'none';
+        document.body.appendChild(nameDiv);
+        // Ensure renderer is below name
+        container.style.zIndex = '2';
 
-        // Function to display messages to the user
-        function showMessage(message) {
-            messageBox.textContent = message;
-            messageBox.style.display = 'block';
+        // Add subtitle cycling text below the name
+        const subtitles = [
+            "software engineer",
+            "Grad school @ UT Austin",
+            "liverpool fan - YNWA",
+            "RL is King"
+        ];
+        const subtitleDiv = document.createElement('div');
+        subtitleDiv.style.position = 'fixed';
+        subtitleDiv.style.top = 'calc(50% + 3.2em)';
+        subtitleDiv.style.left = '50%';
+        subtitleDiv.style.transform = 'translate(-50%, 0)';
+        subtitleDiv.style.color = '#ffe066';
+        subtitleDiv.style.fontSize = '1.6em';
+        subtitleDiv.style.fontWeight = '400';
+        subtitleDiv.style.letterSpacing = '0.04em';
+        subtitleDiv.style.textShadow = '0 1px 8px #000a';
+        subtitleDiv.style.zIndex = '10';
+        subtitleDiv.style.fontFamily = 'Inter, sans-serif';
+        subtitleDiv.style.pointerEvents = 'none';
+        subtitleDiv.style.opacity = '0';
+        subtitleDiv.style.transition = 'opacity 0.7s';
+        document.body.appendChild(subtitleDiv);
+
+        let subtitleIdx = 0;
+        function cycleSubtitle() {
+            subtitleDiv.textContent = subtitles[subtitleIdx];
+            subtitleDiv.style.opacity = '1';
             setTimeout(() => {
-                messageBox.style.display = 'none';
-            }, 3000); // Hide after 3 seconds
+                subtitleDiv.style.opacity = '0';
+                setTimeout(() => {
+                    subtitleIdx = (subtitleIdx + 1) % subtitles.length;
+                    cycleSubtitle();
+                }, 600); // fade out duration
+            }, 1800); // visible duration
         }
+        setTimeout(cycleSubtitle, 600); // initial delay
 
-        // Initialize the 3D scene, camera, and renderer
-        function init() {
-            try {
-                // Create the scene
-                scene = new THREE.Scene();
-                scene.background = null; // Transparent background to show body background
+        // Three.js setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 10);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
 
-                // Set up the camera (perspective camera)
-                // Field of view (FOV), aspect ratio, near clipping plane, far clipping plane
-                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                camera.position.z = 5; // Position the camera back
-
-                // Create the renderer and attach it to the DOM
-                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable antialiasing and alpha for transparency
-                renderer.setSize(window.innerWidth, window.innerHeight); // Set renderer size to full window
-                document.body.appendChild(renderer.domElement); // Add the renderer's canvas to the body
-
-                // Add OrbitControls for interactive camera movement
-                // This allows the user to rotate, pan, and zoom the camera with mouse/touch
-                controls = new OrbitControls(camera, renderer.domElement);
-                controls.enableDamping = true; // Enable smooth camera movement
-                controls.dampingFactor = 0.05; // Damping intensity
-
-                // Create a basic geometry (BoxGeometry for a cube)
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-
-                // Create a material (MeshStandardMaterial for physically-based rendering)
-                // Use a color for the cube
-                const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, roughness: 0.5, metalness: 0.8 }); // Blue, shiny, metallic
-
-                // Create the mesh (geometry + material)
-                cube = new THREE.Mesh(geometry, material);
-                scene.add(cube); // Add the cube to the scene
-
-                // Add ambient light (lights all objects equally from all directions)
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // White light, medium intensity
-                scene.add(ambientLight);
-
-                // Add directional light (simulates sunlight, with direction and intensity)
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // White light, brighter
-                directionalLight.position.set(0, 5, 5); // Position the light
-                scene.add(directionalLight);
-
-                // Handle window resizing to keep the scene responsive
-                window.addEventListener('resize', onWindowResize, false);
-
-                // Hide loading overlay once scene is initialized
-                loadingOverlay.style.display = 'none';
-                showMessage("Drag to rotate, scroll to zoom!");
-
-            } catch (error) {
-                console.error("Error initializing 3D scene:", error);
-                loadingOverlay.textContent = "Error loading 3D content.";
+        // Spheres random cluster (no overlap)
+        const spheres = [];
+        const sphereCount = 50;
+        const minGap = 0.08; // minimum gap between spheres
+        for (let i = 0; i < sphereCount; i++) {
+            let tries = 0;
+            let pos, s;
+            let valid = false;
+            while (!valid && tries < 120) {
+                // Random position in a slightly smaller sphere
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 1.7 + Math.random() * 1.1;
+                const x = Math.sin(phi) * Math.cos(theta) * r;
+                const y = Math.sin(phi) * Math.sin(theta) * r * 0.9;
+                const z = Math.cos(phi) * r * 0.7;
+                s = 0.38 + Math.random() * 0.55;
+                pos = new THREE.Vector3(x, y, z);
+                valid = true;
+                for (let j = 0; j < spheres.length; j++) {
+                    const other = spheres[j];
+                    const minDist = (other.geometry.parameters.radius + s) + minGap;
+                    // Check Euclidean distance and axis-aligned gap
+                    if (
+                        pos.distanceTo(other.position) < minDist ||
+                        Math.abs(pos.x - other.position.x) < minDist ||
+                        Math.abs(pos.y - other.position.y) < minDist ||
+                        Math.abs(pos.z - other.position.z) < minDist
+                    ) {
+                        valid = false;
+                        break;
+                    }
+                }
+                tries++;
             }
+            const geometry = new THREE.SphereGeometry(s, 48, 48);
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0xf8f6ff, // soft white
+                metalness: 0.45,
+                roughness: 0.18,
+                reflectivity: 0.7,
+                clearcoat: 0.18, // reduce clearcoat to avoid 'eyes'
+                clearcoatRoughness: 0.18,
+                transmission: 0.22,
+                ior: 1.6,
+                envMapIntensity: 1.1,
+                sheen: 1.0,
+                sheenColor: new THREE.Color(0xc7e0ff), // subtle blue sheen
+                sheenRoughness: 0.18,
+                iridescence: 0.45,
+                iridescenceIOR: 1.3,
+                iridescenceThicknessRange: [120, 340],
+            });
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.copy(pos);
+            sphere.userData.home = sphere.position.clone();
+            scene.add(sphere);
+            spheres.push(sphere);
         }
 
-        // Function to handle window resizing
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight; // Update camera aspect ratio
-            camera.updateProjectionMatrix(); // Update projection matrix after aspect ratio change
-            renderer.setSize(window.innerWidth, window.innerHeight); // Update renderer size
-            renderer.render(scene, camera); // Re-render the scene
+        // Lighting
+        const ambient = new THREE.AmbientLight(0xffffff, 0.38);
+        scene.add(ambient);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(3, 6, 8);
+        scene.add(dirLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1.2, 100);
+        pointLight.position.set(-4, 4, 8);
+        scene.add(pointLight);
+
+        // Mouse interaction
+        let mouse = new THREE.Vector2(0, 0);
+        let mouseWorld = new THREE.Vector3(0, 0, 0);
+        let raycaster = new THREE.Raycaster();
+        window.addEventListener('mousemove', (event) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            // Project mouse to z=0 plane in world space
+            raycaster.setFromCamera(mouse, camera);
+            const t = -raycaster.ray.origin.z / raycaster.ray.direction.z;
+            mouseWorld = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(t));
+        });
+
+        // Animate spheres with repulsion
+        function animateSpheres() {
+            requestAnimationFrame(animateSpheres);
+            spheres.forEach((sphere, i) => {
+                // Repulsion effect (stronger and bouncier)
+                const dist = sphere.position.distanceTo(mouseWorld);
+                const home = sphere.userData.home;
+                let repulse = new THREE.Vector3();
+                if (dist < 2.2) {
+                    // Stronger repulsion, more bouncy
+                    const strength = 1.5 * Math.pow(2.2 - dist, 1.25);
+                    repulse.copy(sphere.position).sub(mouseWorld).normalize().multiplyScalar(strength);
+                }
+                // Spring back to home (slightly snappier)
+                const toHome = home.clone().sub(sphere.position).multiplyScalar(0.11);
+                // Animate
+                sphere.position.add(toHome).add(repulse.multiplyScalar(0.32));
+                sphere.rotation.y += 0.01 + i * 0.002;
+            });
+            renderer.render(scene, camera);
         }
+        animateSpheres();
 
-        // Animation loop for continuous rendering
-        function animate() {
-            requestAnimationFrame(animate); // Request the next frame
-
-            // Update OrbitControls in each frame
-            controls.update();
-
-            // Rotate the cube on all axes
-            cube.rotation.x += 0.005;
-            cube.rotation.y += 0.005;
-            cube.rotation.z += 0.002;
-
-            renderer.render(scene, camera); // Render the scene
-        }
-
-        // Start the animation loop when the window loads
-        window.onload = function() {
-            init(); // Initialize everything
-            animate(); // Start the animation loop
-        };
+        // Responsive
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }, 2000);
     </script>
 </body>
 </html>
