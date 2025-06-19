@@ -200,7 +200,7 @@
             { name: 'HOME', type: 'home', image: 'home.jpg' },
             { name: 'CV', type: 'cv', image: 'resume.jpg' },
             { name: 'CONTACT', type: 'contact', image: 'contact.jpg' },
-            { name: 'PROJECTS', type: 'projects', image: 'project.jpg' }
+            { name: 'PROJECTS', type: 'projects', image: 'project.jpeg' }
         ];
 
         const textureLoader = new THREE.TextureLoader();
@@ -248,18 +248,40 @@
             table.position.z = 0.1;
             screenGroup.add(table);
 
-            // Create main display with image (rounded corners)
-            const displayShape = createRoundedRectShape(screenWidth * 0.8, screenWidth * 0.5, 0.2);
+            // Create main display, a rounded rectangle that the image will cover
+            const displayWidth = screenWidth * 0.8;
+            const displayHeight = screenWidth * 0.5;
+            const displayShape = createRoundedRectShape(displayWidth, displayHeight, 0.2);
             const displayGeo = new THREE.ShapeGeometry(displayShape);
-            
-            const texture = textureLoader.load(screenConfigs[i].image);
+
+            // Load the texture and apply "cover" style transformations
+            const texture = textureLoader.load(screenConfigs[i].image, (tex) => {
+                // Ensure the texture repeats and doesn't clamp at the edges
+                tex.wrapS = THREE.RepeatWrapping;
+                tex.wrapT = THREE.RepeatWrapping;
+
+                const imageAspect = tex.image.width / tex.image.height;
+                const displayAspect = displayWidth / displayHeight;
+
+                if (imageAspect > displayAspect) {
+                    // Image is wider than display: fit height, crop width
+                    tex.repeat.x = displayAspect / imageAspect;
+                    tex.repeat.y = 1;
+                    tex.offset.x = (1 - tex.repeat.x) / 2;
+                    tex.offset.y = 0;
+                } else {
+                    // Image is taller than display: fit width, crop height
+                    tex.repeat.x = 1;
+                    tex.repeat.y = imageAspect / displayAspect;
+                    tex.offset.x = 0;
+                    tex.offset.y = (1 - tex.repeat.y) / 2;
+                }
+            });
 
             const displayMat = new THREE.MeshStandardMaterial({
                 map: texture,
-                roughness: 0.4,
-                metalness: 0.6,
-                emissive: new THREE.Color(0x1a1a4f),
-                emissiveIntensity: 0.3,
+                roughness: 0.5,
+                metalness: 0.2,
                 side: THREE.DoubleSide
             });
             const display = new THREE.Mesh(displayGeo, displayMat);
