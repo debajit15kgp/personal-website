@@ -220,22 +220,55 @@
             return shape;
         }
 
+        // Function to create a canvas-based alpha map for the rounded corners
+        function createAlphaMap(width, height, radius) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const resolution = 256; // Use a power-of-two resolution for the texture
+            canvas.width = resolution;
+            canvas.height = resolution;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const r = radius * (resolution / Math.max(width, height));
+
+            ctx.fillStyle = 'black'; // The transparent part
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = 'white'; // The opaque part
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.lineTo(w - r, 0);
+            ctx.quadraticCurveTo(w, 0, w, r);
+            ctx.lineTo(w, h - r);
+            ctx.quadraticCurveTo(w, h, w - r, h);
+            ctx.lineTo(r, h);
+            ctx.quadraticCurveTo(0, h, 0, h - r);
+            ctx.lineTo(0, r);
+            ctx.quadraticCurveTo(0, 0, r, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
         for (let i = 0; i < numScreens; i++) {
             const screenGroup = new THREE.Group();
 
-            // Create the main display panel. The image will cover this shape.
+            // Define the dimensions of our panel
             const displayWidth = screenWidth * 1.2;
             const displayHeight = screenWidth * 0.9;
-            const displayShape = createRoundedRectShape(displayWidth, displayHeight, 0.3);
-            const displayGeo = new THREE.ShapeGeometry(displayShape);
 
+            // Use a simple PlaneGeometry for clean texture mapping
+            const displayGeo = new THREE.PlaneGeometry(displayWidth, displayHeight);
+
+            // Load the main image texture and apply the "cover" transformation
             const texture = textureLoader.load(screenConfigs[i].image, (tex) => {
-                tex.wrapS = THREE.RepeatWrapping;
-                tex.wrapT = THREE.RepeatWrapping;
-
                 const imageAspect = tex.image.width / tex.image.height;
                 const displayAspect = displayWidth / displayHeight;
 
+                tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+                
                 if (imageAspect > displayAspect) {
                     tex.repeat.x = displayAspect / imageAspect;
                     tex.repeat.y = 1;
@@ -249,8 +282,11 @@
                 }
             });
 
+            // Create the material with the image and the alpha map for rounded corners
             const displayMat = new THREE.MeshStandardMaterial({
                 map: texture,
+                alphaMap: createAlphaMap(displayWidth, displayHeight, 0.3),
+                transparent: true, // Necessary for alphaMap to work
                 roughness: 0.6,
                 metalness: 0.1,
                 side: THREE.DoubleSide
