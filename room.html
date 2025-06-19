@@ -223,40 +223,13 @@
         for (let i = 0; i < numScreens; i++) {
             const screenGroup = new THREE.Group();
 
-            // Create drape background with rounded corners
-            const drapeShape = createRoundedRectShape(screenWidth * 1.5, screenWidth * 1.2, 0.3);
-            const drapeGeo = new THREE.ShapeGeometry(drapeShape);
-            const drapeMat = new THREE.MeshStandardMaterial({
-                color: 0x1a1a4f,
-                roughness: 0.7,
-                metalness: 0.3,
-                side: THREE.DoubleSide
-            });
-            const drape = new THREE.Mesh(drapeGeo, drapeMat);
-            drape.position.z = -0.2;
-            screenGroup.add(drape);
-
-            // Create table/platform
-            const tableGeo = new THREE.CylinderGeometry(screenWidth * 0.3, screenWidth * 0.25, 0.1, 32);
-            const tableMat = new THREE.MeshStandardMaterial({
-                color: 0x1a1a4f,
-                roughness: 0.5,
-                metalness: 0.5
-            });
-            const table = new THREE.Mesh(tableGeo, tableMat);
-            table.position.y = -screenWidth * 0.4;
-            table.position.z = 0.1;
-            screenGroup.add(table);
-
-            // Create main display, a rounded rectangle that the image will cover
-            const displayWidth = screenWidth * 0.8;
-            const displayHeight = screenWidth * 0.5;
-            const displayShape = createRoundedRectShape(displayWidth, displayHeight, 0.2);
+            // Create the main display panel. The image will cover this shape.
+            const displayWidth = screenWidth * 1.2;
+            const displayHeight = screenWidth * 0.9;
+            const displayShape = createRoundedRectShape(displayWidth, displayHeight, 0.3);
             const displayGeo = new THREE.ShapeGeometry(displayShape);
 
-            // Load the texture and apply "cover" style transformations
             const texture = textureLoader.load(screenConfigs[i].image, (tex) => {
-                // Ensure the texture repeats and doesn't clamp at the edges
                 tex.wrapS = THREE.RepeatWrapping;
                 tex.wrapT = THREE.RepeatWrapping;
 
@@ -264,13 +237,11 @@
                 const displayAspect = displayWidth / displayHeight;
 
                 if (imageAspect > displayAspect) {
-                    // Image is wider than display: fit height, crop width
                     tex.repeat.x = displayAspect / imageAspect;
                     tex.repeat.y = 1;
                     tex.offset.x = (1 - tex.repeat.x) / 2;
                     tex.offset.y = 0;
                 } else {
-                    // Image is taller than display: fit width, crop height
                     tex.repeat.x = 1;
                     tex.repeat.y = imageAspect / displayAspect;
                     tex.offset.x = 0;
@@ -280,12 +251,12 @@
 
             const displayMat = new THREE.MeshStandardMaterial({
                 map: texture,
-                roughness: 0.5,
-                metalness: 0.2,
+                roughness: 0.6,
+                metalness: 0.1,
                 side: THREE.DoubleSide
             });
+
             const display = new THREE.Mesh(displayGeo, displayMat);
-            display.position.y = screenWidth * 0.2; // Adjust position to be above table
             screenGroup.add(display);
 
             // Initial position - spread screens out more
@@ -333,62 +304,46 @@
             }
         });
 
-        // Animation loop
-        const scrollSpeed = 0.015; // Slower speed for smoother movement
-        let time = 0;
+        // A simpler, more robust animation loop for the carousel
+        const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
-            time += 0.016; // Approximate time increment (60fps)
-            
-            // Move screens from right to left with smooth transitions
+
+            const delta = clock.getDelta();
+            const scrollSpeed = 0.8; // Adjust for a comfortable, continuous scroll
+
             screens.forEach((screen) => {
-                // Move left
-                screen.position.x -= scrollSpeed;
-                
-                // If screen goes too far left, move it to the right
-                if (screen.position.x < -spacing * 3) {
-                    screen.position.x = spacing * 2;
-                    
-                    // Ensure smooth transition by adjusting other screens
-                    screens.forEach((otherScreen) => {
-                        if (otherScreen !== screen && otherScreen.position.x > spacing * 1.5) {
-                            otherScreen.position.x = -spacing * 2.5;
-                        }
-                    });
+                // Move left at a constant speed
+                screen.position.x -= scrollSpeed * delta;
+
+                // Loop the screens around
+                if (screen.position.x < -totalWidth / 2 - spacing) {
+                    screen.position.x += totalWidth + spacing;
                 }
-                
-                // Calculate screen's position relative to center for scaling and opacity
-                const distanceFromCenter = Math.abs(screen.position.x);
-                const maxDistance = spacing * 2;
-                
-                // Scale based on distance from center
-                const baseScale = 1;
-                const minScale = 0.8;
-                const scale = baseScale - (baseScale - minScale) * Math.min(distanceFromCenter / maxDistance, 1);
+
+                // --- Fading and scaling based on distance from center ---
+                const dist = Math.abs(screen.position.x);
+                const fadeStart = spacing * 1.5;
+                const fadeEnd = spacing * 2.5;
+
+                // Opacity: Fully visible near the center, fades out at the edges
+                let opacity = 1.0;
+                if (dist > fadeStart) {
+                    opacity = Math.max(0, 1.0 - (dist - fadeStart) / (fadeEnd - fadeStart));
+                }
+
+                // Scale: Smaller at the edges, larger at the center
+                const scale = 1.0 - Math.min(1, dist / fadeEnd) * 0.3;
                 screen.scale.set(scale, scale, scale);
                 
-                // Opacity based on position (fade out as they exit)
-                const opacity = 1 - Math.max(0, Math.min(1, (Math.abs(screen.position.x) - spacing * 1.5) / spacing));
-                screen.children.forEach(child => {
-                    if (child.material) {
+                // Apply opacity to all materials in the group
+                screen.traverse((child) => {
+                    if (child.isMesh && child.material) {
                         child.material.opacity = opacity;
                         child.material.transparent = true;
                     }
                 });
-                
-                // Z-position for parallax effect
-                screen.position.z = -Math.abs(screen.position.x) * 0.1;
-                
-                // Floating animation - unique for each screen
-                screen.position.y = Math.sin(time * 2 + screen.userData.index * Math.PI / 2.5) * 0.15;
-            });
-
-            // Sort screens by X position for proper overlay
-            screens.sort((a, b) => b.position.x - a.position.x);
-            screens.forEach((screen, index) => {
-                scene.remove(screen);
-                scene.add(screen);
             });
 
             renderer.render(scene, camera);
