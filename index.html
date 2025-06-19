@@ -80,6 +80,22 @@
     <div id="loading-bar" style="width: 220px; height: 10px; background: #222; border-radius: 6px; overflow: hidden;">
         <div id="loading-bar-inner" style="height:100%;width:0%;background:#ffe066;transition:width 0.3s;border-radius:6px;"></div>
     </div>
+    
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <!-- Music Control Button -->
+    <button id="music-control" style="position: fixed; top: 32px; left: 36px; width: 48px; height: 48px; background: rgba(0,0,0,0.18); border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 25; cursor: pointer; transition: background 0.2s;">
+        <svg id="music-icon" width="24" height="24" viewBox="0 0 24 24" style="stroke: #ffe066; stroke-width: 2; fill: none;">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+        </svg>
+    </button>
+    
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
     <script>
     // Animate the loading bar
@@ -93,6 +109,67 @@
         requestAnimationFrame(animateBar);
     }
     animateBar();
+
+    // Music Control Functionality
+    const bgMusic = document.getElementById('bg-music');
+    const musicControl = document.getElementById('music-control');
+    const musicIcon = document.getElementById('music-icon');
+    let musicPlaying = false;
+
+    // Function to start music
+    function startMusic() {
+        bgMusic.volume = 0.7; // Set volume to 70%
+        bgMusic.play().then(() => {
+            musicPlaying = true;
+            updateMusicIcon();
+            // Save music state to session storage
+            sessionStorage.setItem('musicPlaying', 'true');
+        }).catch(error => {
+            console.log('Music autoplay blocked:', error);
+            // Show a message to user that they need to interact to start music
+        });
+    }
+
+    // Function to toggle music
+    function toggleMusic() {
+        if (musicPlaying) {
+            bgMusic.pause();
+            musicPlaying = false;
+            sessionStorage.setItem('musicPlaying', 'false');
+        } else {
+            bgMusic.play();
+            musicPlaying = true;
+            sessionStorage.setItem('musicPlaying', 'true');
+        }
+        updateMusicIcon();
+    }
+
+    // Function to update music icon
+    function updateMusicIcon() {
+        if (musicPlaying) {
+            musicIcon.innerHTML = `
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+            `;
+        } else {
+            musicIcon.innerHTML = `
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+                <line x1="6" y1="6" x2="18" y2="18" stroke="#ffe066" stroke-width="2"/>
+            `;
+        }
+    }
+
+    // Add event listeners
+    musicControl.addEventListener('click', toggleMusic);
+    musicControl.addEventListener('mouseenter', () => {
+        musicControl.style.background = 'rgba(255,224,102,0.12)';
+    });
+    musicControl.addEventListener('mouseleave', () => {
+        musicControl.style.background = 'rgba(0,0,0,0.18)';
+    });
 
     // Only show loading if not returning from room.html
     let skipLoading = false;
@@ -321,12 +398,14 @@
         document.getElementById('loading-text').remove();
         document.getElementById('loading-bar').remove();
         renderMainScene();
+        startMusic(); // Start music when skipping loading
     } else {
         setTimeout(() => {
             document.getElementById('cat-gif-row').remove();
             document.getElementById('loading-text').remove();
             document.getElementById('loading-bar').remove();
             renderMainScene();
+            startMusic(); // Start music after loading animation
         }, 1200);
     }
 
@@ -517,12 +596,10 @@
 
     // Open/close menu logic
     menuBtn.onclick = () => {
-        animateMenuBtnOut(() => {
-            menuOverlay.style.display = 'flex';
-            setTimeout(() => menuOverlay.style.opacity = '1', 10);
-            menuBtn.style.display = 'none';
-            closeBtn.style.display = 'flex';
-        });
+        // Save music state before navigating
+        sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
+        sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
+        window.location.href = 'room.html';
     };
     closeBtn.onclick = () => {
         menuOverlay.style.opacity = '0';
@@ -618,6 +695,10 @@
 
     // --- DIVE IN TRANSITION & IMMERSIVE ROOM ---
     diveBtn.onclick = () => {
+        // Save current music state before navigating
+        sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
+        sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
+        
         // Animate zoom into button
         diveBtn.style.transition = 'transform 0.7s cubic-bezier(.77,0,.18,1), box-shadow 0.7s cubic-bezier(.77,0,.18,1), background 0.7s';
         diveBtn.style.transform = 'translate(-50%, 0) scale(18)';

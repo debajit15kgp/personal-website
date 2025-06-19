@@ -53,126 +53,361 @@
 </head>
 <body>
     <button id="back-btn" aria-label="Back to main">
-        <span></span>
+        <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: #ffe066; stroke-width: 2.5; fill: none;">
+            <path d="M15 5l-7 7 7 7"/>
+        </svg>
     </button>
+    
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <!-- Music Control Button -->
+    <button id="music-control" style="position: fixed; top: 32px; left: 100px; width: 48px; height: 48px; background: rgba(0,0,0,0.18); border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 25; cursor: pointer; transition: background 0.2s;">
+        <svg id="music-icon" width="24" height="24" viewBox="0 0 24 24" style="stroke: #ffe066; stroke-width: 2; fill: none;">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+        </svg>
+    </button>
+    
+    <!-- Menu Button -->
+    <button id="menu-btn" style="position: fixed; top: 32px; right: 36px; z-index: 25; background: none; border: none; cursor: pointer;">
+        <!-- Hamburger Icon SVG -->
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="24" fill="rgba(0,0,0,0.18)"/>
+            <line x1="14" y1="18" x2="34" y2="18" stroke="#ffe066" stroke-width="3"/>
+            <line x1="14" y1="30" x2="34" y2="30" stroke="#ffe066" stroke-width="3"/>
+        </svg>
+    </button>
+
     <div id="three-room"></div>
     <script>
-    document.getElementById('back-btn').onclick = () => {
-        window.sessionStorage.setItem('fromRoom', '1');
-        window.location.href = 'index.html';
-    };
-    // Three.js setup
-    const container = document.getElementById('three-room');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x181818);
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(2.5, 5.5, 6.5); // angled 3D view
-    camera.lookAt(0, 0.7, 0);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    container.appendChild(renderer.domElement);
-    // Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-    scene.add(ambient);
-    const spot = new THREE.SpotLight(0xffffff, 1.2, 30, Math.PI/5, 0.4, 1.2);
-    spot.position.set(0, 8, 6);
-    spot.target.position.set(0, 0, 0);
-    scene.add(spot);
-    scene.add(spot.target);
-    const fill = new THREE.PointLight(0xffe066, 0.5, 20);
-    fill.position.set(-4, 3, 6);
-    scene.add(fill);
-    // Floor
-    const floorGeo = new THREE.PlaneGeometry(16, 16);
-    const floorMat = new THREE.MeshPhysicalMaterial({ color: 0x232323, roughness: 0.38, metalness: 0.1 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI/2;
-    floor.position.y = -0.01;
-    scene.add(floor);
-    // Table
-    const tableGeo = new THREE.BoxGeometry(5.2, 0.32, 2.8);
-    const tableMat = new THREE.MeshPhysicalMaterial({ color: 0xe0c97f, roughness: 0.22, metalness: 0.18 });
-    const table = new THREE.Mesh(tableGeo, tableMat);
-    table.position.set(0, 0.6, 0);
-    scene.add(table);
-    // Table legs
-    for (let dx of [-1.7, 1.7]) {
-        for (let dz of [-0.8, 0.8]) {
-            const leg = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.09, 0.09, 0.7, 24),
-                new THREE.MeshPhysicalMaterial({ color: 0x9c8a5a, roughness: 0.3, metalness: 0.1 })
-            );
-            leg.position.set(dx, 0.25, dz);
-            scene.add(leg);
+    document.addEventListener('DOMContentLoaded', () => {
+        // Music Control Functionality
+        const bgMusic = document.getElementById('bg-music');
+        const musicControl = document.getElementById('music-control');
+        const musicIcon = document.getElementById('music-icon');
+        let musicPlaying = false;
+
+        // Function to start music
+        function startMusic() {
+            // Restore volume from session storage
+            const savedVolume = sessionStorage.getItem('musicVolume');
+            if (savedVolume) {
+                bgMusic.volume = parseFloat(savedVolume);
+            } else {
+                bgMusic.volume = 0.7;
+            }
+            
+            // Always try to play music immediately
+            bgMusic.play().then(() => {
+                musicPlaying = true;
+                updateMusicIcon();
+            }).catch(error => {
+                console.log('Music autoplay blocked:', error);
+                // Show a message to user that they need to interact to start music
+            });
         }
-    }
-    // Books (blog) - stacked column, clickable
-    const bookColors = [0xffe066, 0xf8f6ff, 0x222222, 0x8ecae6, 0xf4978e];
-    const books = [];
-    for (let i = 0; i < 5; i++) {
-        const bookGeo = new THREE.BoxGeometry(0.7, 0.16, 1.1);
-        const bookMat = new THREE.MeshPhysicalMaterial({ color: bookColors[i % bookColors.length], roughness: 0.18, metalness: 0.18 });
-        const book = new THREE.Mesh(bookGeo, bookMat);
-        // Stack books in a column (y increases)
-        book.position.set(-1.2, 0.78 + i * 0.18, 0.2);
-        book.rotation.y = Math.PI * 0.04 * (i - 2);
-        book.userData.type = 'blog';
-        scene.add(book);
-        books.push(book);
-        // Add label (simple 3D text substitute)
-        const canvas = document.createElement('canvas');
-        canvas.width = 128; canvas.height = 32;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#222';
-        ctx.font = 'bold 22px Inter';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Blog', 64, 16);
-        const tex = new THREE.CanvasTexture(canvas);
-        const labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
-        const labelGeo = new THREE.PlaneGeometry(0.7, 0.18);
-        const label = new THREE.Mesh(labelGeo, labelMat);
-        label.position.set(0, 0.09, 0.3);
-        label.rotation.x = -Math.PI/2.2;
-        book.add(label);
-    }
-    // Interactivity: raycaster for books
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    let hoveredBook = null;
-    renderer.domElement.addEventListener('mousemove', (event) => {
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    });
-    renderer.domElement.addEventListener('click', (event) => {
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(books);
-        if (intersects.length > 0) {
-            window.location.href = 'blog.html';
+
+        // Function to toggle music
+        function toggleMusic() {
+            if (musicPlaying) {
+                bgMusic.pause();
+                musicPlaying = false;
+                sessionStorage.setItem('musicPlaying', 'false');
+            } else {
+                bgMusic.play();
+                musicPlaying = true;
+                sessionStorage.setItem('musicPlaying', 'true');
+            }
+            updateMusicIcon();
         }
-    });
-    // Animate
-    function animateRoom() {
-        requestAnimationFrame(animateRoom);
-        // Highlight hovered book
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(books);
-        if (hoveredBook) hoveredBook.material.emissive = new THREE.Color(0x000000);
-        if (intersects.length > 0) {
-            hoveredBook = intersects[0].object;
-            hoveredBook.material.emissive = new THREE.Color(0xffe066);
-        } else {
-            hoveredBook = null;
+
+        // Function to update music icon
+        function updateMusicIcon() {
+            if (musicPlaying) {
+                musicIcon.innerHTML = `
+                    <path d="M9 18V5l12-2v13"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <circle cx="18" cy="16" r="3"/>
+                `;
+            } else {
+                musicIcon.innerHTML = `
+                    <path d="M9 18V5l12-2v13"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <circle cx="18" cy="16" r="3"/>
+                    <line x1="6" y1="6" x2="18" y2="18" stroke="#ffe066" stroke-width="2"/>
+                `;
+            }
         }
-        renderer.render(scene, camera);
-    }
-    animateRoom();
-    // Responsive
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+
+        // Add event listeners
+        musicControl.addEventListener('click', toggleMusic);
+        musicControl.addEventListener('mouseenter', () => {
+            musicControl.style.background = 'rgba(255,224,102,0.12)';
+        });
+        musicControl.addEventListener('mouseleave', () => {
+            musicControl.style.background = 'rgba(0,0,0,0.18)';
+        });
+
+        // Start music when page loads
+        startMusic();
+
+        document.getElementById('back-btn').onclick = () => {
+            // Save current music state before navigating
+            sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
+            sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
+            window.sessionStorage.setItem('fromRoom', '1');
+            window.location.href = 'index.html';
+        };
+        // Three.js setup
+        const container = document.getElementById('three-room');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x181818);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1, 18); // Moved camera back further for bigger screens
+        camera.fov = 65; // Adjusted FoV to reduce distortion
         camera.updateProjectionMatrix();
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // Remove existing lights
+        scene.children = scene.children.filter(child => !(child instanceof THREE.Light));
+        
+        // Basic lighting setup
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(0, 10, 10);
+        scene.add(mainLight);
+
+        // Create movie screens
+        const screens = [];
+        const numScreens = 5;
+        const screenWidth = 8; // Made screens significantly larger
+        const spacing = 12;    // Increased spacing accordingly
+        const totalWidth = spacing * numScreens; // Total width of all screens including gaps
+
+        // Screen content configuration with image paths
+        const screenConfigs = [
+            { name: 'BLOG', type: 'blog', image: 'blog.jpg' },
+            { name: 'HOME', type: 'home', image: 'home.jpg' },
+            { name: 'CV', type: 'cv', image: 'resume.jpg' },
+            { name: 'CONTACT', type: 'contact', image: 'contact.jpg' },
+            { name: 'PROJECTS', type: 'projects', image: 'project.jpg' }
+        ];
+
+        const textureLoader = new THREE.TextureLoader();
+
+        // Create rounded rectangle shape
+        function createRoundedRectShape(width, height, radius) {
+            const shape = new THREE.Shape();
+            shape.moveTo(-width/2 + radius, -height/2);
+            shape.lineTo(width/2 - radius, -height/2);
+            shape.quadraticCurveTo(width/2, -height/2, width/2, -height/2 + radius);
+            shape.lineTo(width/2, height/2 - radius);
+            shape.quadraticCurveTo(width/2, height/2, width/2 - radius, height/2);
+            shape.lineTo(-width/2 + radius, height/2);
+            shape.quadraticCurveTo(-width/2, height/2, -width/2, height/2 - radius);
+            shape.lineTo(-width/2, -height/2 + radius);
+            shape.quadraticCurveTo(-width/2, -height/2, -width/2 + radius, -height/2);
+            return shape;
+        }
+
+        for (let i = 0; i < numScreens; i++) {
+            const screenGroup = new THREE.Group();
+
+            // Create drape background with rounded corners
+            const drapeShape = createRoundedRectShape(screenWidth * 1.5, screenWidth * 1.2, 0.3);
+            const drapeGeo = new THREE.ShapeGeometry(drapeShape);
+            const drapeMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a4f,
+                roughness: 0.7,
+                metalness: 0.3,
+                side: THREE.DoubleSide
+            });
+            const drape = new THREE.Mesh(drapeGeo, drapeMat);
+            drape.position.z = -0.2;
+            screenGroup.add(drape);
+
+            // Create table/platform
+            const tableGeo = new THREE.CylinderGeometry(screenWidth * 0.3, screenWidth * 0.25, 0.1, 32);
+            const tableMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a4f,
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            const table = new THREE.Mesh(tableGeo, tableMat);
+            table.position.y = -screenWidth * 0.4;
+            table.position.z = 0.1;
+            screenGroup.add(table);
+
+            // Create main display with image (rounded corners)
+            const displayShape = createRoundedRectShape(screenWidth * 0.8, screenWidth * 0.5, 0.2);
+            const displayGeo = new THREE.ShapeGeometry(displayShape);
+            
+            const texture = textureLoader.load(screenConfigs[i].image);
+
+            const displayMat = new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.4,
+                metalness: 0.6,
+                emissive: new THREE.Color(0x1a1a4f),
+                emissiveIntensity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const display = new THREE.Mesh(displayGeo, displayMat);
+            display.position.y = screenWidth * 0.2; // Adjust position to be above table
+            screenGroup.add(display);
+
+            // Initial position - spread screens out more
+            const xPos = (i - (numScreens - 1) / 2) * spacing;
+            screenGroup.position.set(xPos, 1.5, 0); // Start higher up
+            screenGroup.userData.type = screenConfigs[i].type;
+            screenGroup.userData.initialX = xPos;
+            screenGroup.userData.index = i;
+            scene.add(screenGroup);
+            screens.push(screenGroup);
+        }
+
+        // Add some fill lights to ensure visibility
+        const fillLight1 = new THREE.PointLight(0xffffff, 0.3, 50);
+        fillLight1.position.set(-5, 5, 8);
+        scene.add(fillLight1);
+
+        const fillLight2 = new THREE.PointLight(0xffffff, 0.3, 50);
+        fillLight2.position.set(5, 5, 8);
+        scene.add(fillLight2);
+
+        // Click interaction
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        renderer.domElement.addEventListener('click', (event) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let screenGroup = intersects[0].object;
+                while (screenGroup.parent && screenGroup.parent !== scene) {
+                    screenGroup = screenGroup.parent;
+                }
+                
+                if (screenGroup.userData.type === 'blog') {
+                    sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
+                    sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
+                    window.location.href = 'blog.html';
+                }
+            }
+        });
+
+        // Animation loop
+        const scrollSpeed = 0.015; // Slower speed for smoother movement
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.016; // Approximate time increment (60fps)
+            
+            // Move screens from right to left with smooth transitions
+            screens.forEach((screen) => {
+                // Move left
+                screen.position.x -= scrollSpeed;
+                
+                // If screen goes too far left, move it to the right
+                if (screen.position.x < -spacing * 3) {
+                    screen.position.x = spacing * 2;
+                    
+                    // Ensure smooth transition by adjusting other screens
+                    screens.forEach((otherScreen) => {
+                        if (otherScreen !== screen && otherScreen.position.x > spacing * 1.5) {
+                            otherScreen.position.x = -spacing * 2.5;
+                        }
+                    });
+                }
+                
+                // Calculate screen's position relative to center for scaling and opacity
+                const distanceFromCenter = Math.abs(screen.position.x);
+                const maxDistance = spacing * 2;
+                
+                // Scale based on distance from center
+                const baseScale = 1;
+                const minScale = 0.8;
+                const scale = baseScale - (baseScale - minScale) * Math.min(distanceFromCenter / maxDistance, 1);
+                screen.scale.set(scale, scale, scale);
+                
+                // Opacity based on position (fade out as they exit)
+                const opacity = 1 - Math.max(0, Math.min(1, (Math.abs(screen.position.x) - spacing * 1.5) / spacing));
+                screen.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = opacity;
+                        child.material.transparent = true;
+                    }
+                });
+                
+                // Z-position for parallax effect
+                screen.position.z = -Math.abs(screen.position.x) * 0.1;
+                
+                // Floating animation - unique for each screen
+                screen.position.y = Math.sin(time * 2 + screen.userData.index * Math.PI / 2.5) * 0.15;
+            });
+
+            // Sort screens by X position for proper overlay
+            screens.sort((a, b) => b.position.x - a.position.x);
+            screens.forEach((screen, index) => {
+                scene.remove(screen);
+                scene.add(screen);
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Enhance hover effect
+        renderer.domElement.addEventListener('mousemove', (event) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            screens.forEach(screen => {
+                // Reset hover effects
+                screen.position.z = -Math.abs(screen.position.x) * 0.1;
+                if (screen.children[2]) {
+                    screen.children[2].material.emissiveIntensity = 0.2;
+                }
+            });
+
+            if (intersects.length > 0) {
+                let screenGroup = intersects[0].object;
+                while (screenGroup.parent && screenGroup.parent !== scene) {
+                    screenGroup = screenGroup.parent;
+                }
+                if (screens.includes(screenGroup)) {
+                    // Enhanced hover effect
+                    screenGroup.position.z = -Math.abs(screenGroup.position.x) * 0.1 + 0.5;
+                    if (screenGroup.children[2]) {
+                        screenGroup.children[2].material.emissiveIntensity = 0.8;
+                    }
+                    document.body.style.cursor = screenGroup.userData.type === 'blog' ? 'pointer' : 'default';
+                }
+            } else {
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        animate();
     });
     </script>
 </body>
