@@ -29,19 +29,34 @@
             background-color: transparent;
         }
         #loading-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
             background: transparent;
-            color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            transition: opacity 1s ease-in-out;
+            transition: opacity 0.7s, transform 0.7s, filter 0.7s;
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0px);
+        }
+        #loading-overlay.fade-out {
+            opacity: 0;
+            transform: scale(1.05);
+            filter: blur(8px);
+            pointer-events: none;
+        }
+        #three-container {
+            opacity: 0;
+            transition: opacity 2.2s cubic-bezier(.77,0,.18,1);
+        }
+        #three-container.fade-in {
+            opacity: 1;
         }
         .loading-text {
             position: absolute;
@@ -74,14 +89,18 @@
     </style>
 </head>
 <body id="main-body" style="background: #000; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-    <div id="cat-gif-row" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-end; gap: 32px; margin-bottom: 36px;">
-        <img src="cat.gif" alt="Cat 1" style="max-width: 200px; max-height: 200px; border-radius: 16px;" />
-        <img src="cat1.gif" alt="Cat 2" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
-        <img src="cat2.gif" alt="Cat 3" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
-    </div>
-    <div id="loading-text" style="color: #fff; font-size: 1.5em; font-weight: bold; letter-spacing: 0.1em; margin-bottom: 18px;">Loading…</div>
-    <div id="loading-bar" style="width: 220px; height: 10px; background: #222; border-radius: 6px; overflow: hidden;">
-        <div id="loading-bar-inner" style="height:100%;width:0%;background:#ffe066;transition:width 0.3s;border-radius:6px;"></div>
+    <video id="bg-video" autoplay loop muted playsinline
+      style="position: fixed; top: 0; left: 0; min-width: 100vw; min-height: 100vh; object-fit: cover; z-index: 0;">
+      <source src="assets/bgvideo.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.7s;">
+        <div id="cat-gif-row" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-end; gap: 32px; margin-bottom: 36px;">
+            <img src="cat.gif" alt="Cat 1" style="max-width: 200px; max-height: 200px; border-radius: 16px;" />
+            <img src="cat1.gif" alt="Cat 2" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
+            <img src="cat2.gif" alt="Cat 3" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
+        </div>
+        <div id="loading-percent" style="font-family: 'Playfair Display', serif; font-size: 4.2em; color: #ffe066; font-weight: 700; letter-spacing: 0.08em; margin-top: 10px; text-shadow: 0 2px 16px #000a;">1%</div>
     </div>
     
     <!-- Background Music -->
@@ -101,39 +120,59 @@
     
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
     <script>
-    // Animate the loading bar
-    function animateBar() {
-        const bar = document.getElementById('loading-bar-inner');
-        if (bar) {
-            const t = (performance.now() * 0.001) % 2;
-            const percent = t < 1 ? t : 2 - t;
-            bar.style.width = (percent * 100) + '%';
+    // Animate the loading percent
+    function animatePercent(duration = 2200) {
+        const percentEl = document.getElementById('loading-percent');
+        if (!percentEl) return;
+        let start = null;
+        function step(ts) {
+            if (!start) start = ts;
+            const elapsed = ts - start;
+            let percent = Math.min(100, Math.floor((elapsed / duration) * 100) + 1);
+            percentEl.textContent = percent + '%';
+            if (percent < 100) {
+                requestAnimationFrame(step);
+            } else {
+                percentEl.textContent = '100%';
+            }
         }
-        requestAnimationFrame(animateBar);
+        requestAnimationFrame(step);
     }
-    animateBar();
+    animatePercent();
 
-    // Music Control Functionality
+    // --- Standardized Music Control ---
     const bgMusic = document.getElementById('bg-music');
     const musicControl = document.getElementById('music-control');
     const musicIcon = document.getElementById('music-icon');
     let musicPlaying = false;
 
-    // Function to start music
     function startMusic() {
-        bgMusic.volume = 0.7; // Set volume to 70%
-        bgMusic.play().then(() => {
-            musicPlaying = true;
+        const savedVolume = sessionStorage.getItem('musicVolume');
+        if (savedVolume) {
+            bgMusic.volume = parseFloat(savedVolume);
+        } else {
+            bgMusic.volume = 0.7; // Default volume
+        }
+        
+        const wasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
+        // Play if returning from a page where music was on, or if it's the very first visit
+        if (wasPlaying || sessionStorage.getItem('musicPlaying') === null) {
+            bgMusic.play().then(() => {
+                musicPlaying = true;
+                sessionStorage.setItem('musicPlaying', 'true');
+                updateMusicIcon();
+            }).catch(error => {
+                console.log('Music autoplay blocked:', error);
+                musicPlaying = false;
+                sessionStorage.setItem('musicPlaying', 'false'); // Set state to off if autoplay fails
+                updateMusicIcon();
+            });
+        } else {
+            musicPlaying = false;
             updateMusicIcon();
-            // Save music state to session storage
-            sessionStorage.setItem('musicPlaying', 'true');
-        }).catch(error => {
-            console.log('Music autoplay blocked:', error);
-            // Show a message to user that they need to interact to start music
-        });
+        }
     }
 
-    // Function to toggle music
     function toggleMusic() {
         if (musicPlaying) {
             bgMusic.pause();
@@ -147,38 +186,53 @@
         updateMusicIcon();
     }
 
-    // Function to update music icon
     function updateMusicIcon() {
         if (musicPlaying) {
             musicIcon.innerHTML = `
-                <path d="M9 18V5l12-2v13"/>
-                <circle cx="6" cy="18" r="3"/>
-                <circle cx="18" cy="16" r="3"/>
+                <path d=\"M9 18V5l12-2v13\"/>
+                <circle cx=\"6\" cy=\"18\" r=\"3\"/>
+                <circle cx=\"18\" cy=\"16\" r=\"3\"/>
             `;
         } else {
             musicIcon.innerHTML = `
-                <path d="M9 18V5l12-2v13"/>
-                <circle cx="6" cy="18" r="3"/>
-                <circle cx="18" cy="16" r="3"/>
-                <line x1="6" y1="6" x2="18" y2="18" stroke="#ffe066" stroke-width="2"/>
+                <path d=\"M9 18V5l12-2v13\"/>
+                <circle cx=\"6\" cy=\"18\" r=\"3\"/>
+                <circle cx=\"18\" cy=\"16\" r=\"3\"/>
+                <line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\" stroke=\"#ffe066\" stroke-width=\"2\"/>
             `;
         }
     }
-
-    // Add event listeners
+    
     musicControl.addEventListener('click', toggleMusic);
-    musicControl.addEventListener('mouseenter', () => {
-        musicControl.style.background = 'rgba(255,224,102,0.12)';
-    });
-    musicControl.addEventListener('mouseleave', () => {
-        musicControl.style.background = 'rgba(0,0,0,0.18)';
-    });
+    musicControl.addEventListener('mouseenter', () => { musicControl.style.background = 'rgba(255,224,102,0.12)'; });
+    musicControl.addEventListener('mouseleave', () => { musicControl.style.background = 'rgba(0,0,0,0.18)'; });
+
+    // Initialize music state on page load
+    startMusic();
 
     // Only show loading if not returning from room.html
     let skipLoading = false;
     if (window.sessionStorage.getItem('fromRoom') === '1') {
         skipLoading = true;
         window.sessionStorage.removeItem('fromRoom');
+    }
+
+    function fadeOutAndRemoveLoadingOverlay() {
+        const overlay = document.getElementById('loading-overlay');
+        const three = document.getElementById('three-container');
+        if (overlay) {
+            overlay.classList.add('fade-out');
+            if (three) {
+                three.style.display = 'block';
+                setTimeout(() => three.classList.add('fade-in'), 40);
+            }
+            setTimeout(() => overlay.remove(), 800);
+        } else {
+            if (three) {
+                three.style.display = 'block';
+                setTimeout(() => three.classList.add('fade-in'), 40);
+            }
+        }
     }
 
     function renderMainScene() {
@@ -191,6 +245,7 @@
         container.style.width = '100vw';
         container.style.height = '100vh';
         container.style.zIndex = '1';
+        container.style.display = 'none'; // Hide until loading is done
         document.body.appendChild(container);
 
         // Add name in yellow, centered in the foreground
@@ -233,7 +288,7 @@
         subtitleDiv.style.fontFamily = 'Inter, sans-serif';
         subtitleDiv.style.pointerEvents = 'none';
         subtitleDiv.style.opacity = '0';
-        subtitleDiv.style.transition = 'opacity 0.7s';
+        subtitleDiv.style.transition = 'opacity 1.7s';
         document.body.appendChild(subtitleDiv);
 
         let subtitleIdx = 0;
@@ -252,10 +307,10 @@
 
         // Three.js setup
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000); // restore to black
+        scene.background = null;
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.set(0, 0, 10);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(renderer.domElement);
 
@@ -281,7 +336,6 @@
                 for (let j = 0; j < spheres.length; j++) {
                     const other = spheres[j];
                     const minDist = (other.geometry.parameters.radius + s) + minGap;
-                    // Check Euclidean distance and axis-aligned gap
                     if (
                         pos.distanceTo(other.position) < minDist ||
                         Math.abs(pos.x - other.position.x) < minDist ||
@@ -296,17 +350,17 @@
             }
             const geometry = new THREE.SphereGeometry(s, 48, 48);
             const material = new THREE.MeshPhysicalMaterial({
-                color: 0xf8f6ff, // soft white
+                color: 0xf8f6ff,
                 metalness: 0.45,
                 roughness: 0.18,
                 reflectivity: 0.7,
-                clearcoat: 0.18, // reduce clearcoat to avoid 'eyes'
+                clearcoat: 0.18,
                 clearcoatRoughness: 0.18,
                 transmission: 0.22,
                 ior: 1.6,
                 envMapIntensity: 1.1,
                 sheen: 1.0,
-                sheenColor: new THREE.Color(0xc7e0ff), // subtle blue sheen
+                sheenColor: new THREE.Color(0xc7e0ff),
                 sheenRoughness: 0.18,
                 iridescence: 0.45,
                 iridescenceIOR: 1.3,
@@ -337,7 +391,6 @@
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            // Project mouse to z=0 plane in world space
             raycaster.setFromCamera(mouse, camera);
             const t = -raycaster.ray.origin.z / raycaster.ray.direction.z;
             mouseWorld = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(t));
@@ -347,23 +400,18 @@
         function animateSpheres() {
             requestAnimationFrame(animateSpheres);
             spheres.forEach((sphere, i) => {
-                // Repulsion effect (stronger and bouncier)
                 const dist = sphere.position.distanceTo(mouseWorld);
                 const home = sphere.userData.home;
                 let repulse = new THREE.Vector3();
                 if (dist < 2.2) {
-                    // Stronger repulsion, more bouncy
                     const strength = 1.5 * Math.pow(2.2 - dist, 1.25);
                     repulse.copy(sphere.position).sub(mouseWorld).normalize().multiplyScalar(strength);
                 }
-                // Spring back to home (slightly snappier)
                 const toHome = home.clone().sub(sphere.position).multiplyScalar(0.11);
-                // Animate
                 sphere.position.add(toHome).add(repulse.multiplyScalar(0.32));
                 sphere.rotation.y += 0.01 + i * 0.002;
             });
 
-            // --- Dynamic separation to prevent merging ---
             for (let i = 0; i < spheres.length; i++) {
                 for (let j = i + 1; j < spheres.length; j++) {
                     const a = spheres[i];
@@ -374,7 +422,6 @@
                     const delta = b.position.clone().sub(a.position);
                     const d = delta.length();
                     if (d < minDist && d > 0.0001) {
-                        // Push each sphere away from the other by half the overlap
                         const overlap = (minDist - d) / 2;
                         const push = delta.normalize().multiplyScalar(overlap + 0.001);
                         b.position.add(push);
@@ -382,7 +429,6 @@
                     }
                 }
             }
-
             renderer.render(scene, camera);
         }
         animateSpheres();
@@ -393,279 +439,20 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        fadeOutAndRemoveLoadingOverlay();
     }
 
     // Call showMainScene or loading logic
     if (skipLoading) {
-        document.getElementById('cat-gif-row').remove();
-        document.getElementById('loading-text').remove();
-        document.getElementById('loading-bar').remove();
+        fadeOutAndRemoveLoadingOverlay();
         renderMainScene();
-        startMusic(); // Start music when skipping loading
     } else {
         setTimeout(() => {
-            document.getElementById('cat-gif-row').remove();
-            document.getElementById('loading-text').remove();
-            document.getElementById('loading-bar').remove();
             renderMainScene();
-            startMusic(); // Start music after loading animation
         }, 1200);
     }
-
-    // --- MENU BUTTON & OVERLAY ---
-    // Remove old menuBtn if present (for hot reload)
-    if (document.getElementById('menu-btn')) document.getElementById('menu-btn').remove();
-    if (document.getElementById('menu-overlay')) document.getElementById('menu-overlay').remove();
-    if (document.getElementById('close-btn')) document.getElementById('close-btn').remove();
-
-    // Add hamburger menu button (2 lines)
-    const menuBtn = document.createElement('button');
-    menuBtn.id = 'menu-btn';
-    menuBtn.setAttribute('aria-label', 'Open menu');
-    menuBtn.style.position = 'fixed';
-    menuBtn.style.top = '32px';
-    menuBtn.style.right = '36px';
-    menuBtn.style.width = '48px';
-    menuBtn.style.height = '48px';
-    menuBtn.style.background = 'rgba(0,0,0,0.18)';
-    menuBtn.style.border = 'none';
-    menuBtn.style.borderRadius = '50%';
-    menuBtn.style.display = 'flex';
-    menuBtn.style.flexDirection = 'column';
-    menuBtn.style.justifyContent = 'center';
-    menuBtn.style.alignItems = 'center';
-    menuBtn.style.zIndex = '20';
-    menuBtn.style.cursor = 'pointer';
-    menuBtn.style.transition = 'background 0.2s';
-    menuBtn.onmouseenter = () => menuBtn.style.background = 'rgba(255,224,102,0.12)';
-    menuBtn.onmouseleave = () => menuBtn.style.background = 'rgba(0,0,0,0.18)';
-    // Two animated lines
-    const line1 = document.createElement('div');
-    const line2 = document.createElement('div');
-    [line1, line2].forEach(line => {
-        line.style.width = '26px';
-        line.style.height = '4px';
-        line.style.background = '#ffe066';
-        line.style.margin = '4px 0';
-        line.style.borderRadius = '2px';
-        line.style.transition = 'all 0.45s cubic-bezier(.77,0,.18,1)';
-    });
-    menuBtn.appendChild(line1);
-    menuBtn.appendChild(line2);
-    document.body.appendChild(menuBtn);
-
-    // Menu overlay
-    const menuOverlay = document.createElement('div');
-    menuOverlay.id = 'menu-overlay';
-    menuOverlay.style.position = 'fixed';
-    menuOverlay.style.top = '0';
-    menuOverlay.style.left = '0';
-    menuOverlay.style.width = '100vw';
-    menuOverlay.style.height = '100vh';
-    menuOverlay.style.background = 'linear-gradient(135deg, #000 0%, #1a1a1a 100%)';
-    menuOverlay.style.display = 'none';
-    menuOverlay.style.flexDirection = 'column';
-    menuOverlay.style.justifyContent = 'center';
-    menuOverlay.style.alignItems = 'center';
-    menuOverlay.style.zIndex = '30';
-    menuOverlay.style.transition = 'opacity 0.4s';
-    document.body.appendChild(menuOverlay);
-
-    // Cross (close) button
-    const closeBtn = document.createElement('button');
-    closeBtn.id = 'close-btn';
-    closeBtn.setAttribute('aria-label', 'Close menu');
-    closeBtn.style.position = 'fixed';
-    closeBtn.style.top = '32px';
-    closeBtn.style.right = '36px';
-    closeBtn.style.width = '48px';
-    closeBtn.style.height = '48px';
-    closeBtn.style.background = 'rgba(0,0,0,0.18)';
-    closeBtn.style.border = 'none';
-    closeBtn.style.borderRadius = '50%';
-    closeBtn.style.display = 'flex';
-    closeBtn.style.justifyContent = 'center';
-    closeBtn.style.alignItems = 'center';
-    closeBtn.style.zIndex = '40';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.transition = 'background 0.2s';
-    closeBtn.style.display = 'none';
-    closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(255,224,102,0.12)';
-    closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(0,0,0,0.18)';
-    // Cross icon
-    const cross = document.createElement('div');
-    cross.style.width = '26px';
-    cross.style.height = '26px';
-    cross.style.position = 'relative';
-    for (let i = 0; i < 2; i++) {
-        const bar = document.createElement('div');
-        bar.style.position = 'absolute';
-        bar.style.width = '100%';
-        bar.style.height = '3.5px';
-        bar.style.background = '#ffe066';
-        bar.style.top = '50%';
-        bar.style.left = '0';
-        bar.style.transform = i === 0 ? 'rotate(45deg) translateY(-50%)' : 'rotate(-45deg) translateY(-50%)';
-        bar.style.borderRadius = '2px';
-        cross.appendChild(bar);
-    }
-    closeBtn.appendChild(cross);
-    document.body.appendChild(closeBtn);
-
-    // Menu box layout - 5 large, irregular rectangles filling the screen
-    const menuNames = ['home', 'cv', 'projects', 'about', 'contact'];
-    // Shuffle menuNames for random order
-    for (let i = menuNames.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [menuNames[i], menuNames[j]] = [menuNames[j], menuNames[i]];
-    }
-    // Irregular grid: 2 rows, 3 cols (last cell spans 2 cols)
-    const menuGrid = document.createElement('div');
-    menuGrid.style.display = 'grid';
-    menuGrid.style.gridTemplateRows = '1fr 1fr';
-    menuGrid.style.gridTemplateColumns = '1.2fr 1fr 1.3fr';
-    menuGrid.style.gap = '2vw 2vh';
-    menuGrid.style.width = '100vw';
-    menuGrid.style.height = '100vh';
-    menuGrid.style.padding = '6vh 5vw';
-    menuOverlay.appendChild(menuGrid);
-    // Box styles
-    const boxStyles = [
-        // row, col, rowSpan, colSpan, alignSelf, justifySelf
-        [1, 1, 1, 1, 'start', 'start'],
-        [1, 2, 1, 1, 'end', 'center'],
-        [1, 3, 2, 1, 'center', 'end'],
-        [2, 1, 1, 2, 'center', 'center'],
-        [2, 2, 1, 1, 'end', 'end'],
-    ];
-    for (let i = 0; i < 5; i++) {
-        const box = document.createElement('div');
-        box.style.gridRow = `${boxStyles[i][0]} / span ${boxStyles[i][2]}`;
-        box.style.gridColumn = `${boxStyles[i][1]} / span ${boxStyles[i][3]}`;
-        box.style.alignSelf = boxStyles[i][4];
-        box.style.justifySelf = boxStyles[i][5];
-        box.style.width = `min(100%, 38vw)`;
-        box.style.height = `min(100%, 32vh)`;
-        box.style.background = i % 2 === 0 ? 'rgba(255,224,102,0.93)' : 'rgba(255,255,255,0.93)';
-        box.style.borderRadius = '22px';
-        box.style.boxShadow = '0 8px 48px #0002';
-        box.style.position = 'relative';
-        // Small text in a corner/edge
-        const label = document.createElement('span');
-        label.textContent = menuNames[i];
-        label.style.position = 'absolute';
-        label.style.fontFamily = 'Gateway, Inter, sans-serif';
-        label.style.fontWeight = 'bold';
-        label.style.fontSize = '1.1em';
-        label.style.letterSpacing = '0.08em';
-        label.style.textTransform = 'uppercase';
-        label.style.color = '#222';
-        label.style.opacity = '0.85';
-        label.style.padding = '18px 24px';
-        // Place label in a random corner/edge
-        const labelPos = [
-            ['top', 'left'], ['top', 'right'], ['bottom', 'left'], ['bottom', 'right'], ['top', 'center'], ['bottom', 'center']
-        ];
-        const pos = labelPos[Math.floor(Math.random() * labelPos.length)];
-        if (pos[0] === 'top') label.style.top = '0';
-        if (pos[0] === 'bottom') label.style.bottom = '0';
-        if (pos[1] === 'left') label.style.left = '0';
-        if (pos[1] === 'right') label.style.right = '0';
-        if (pos[1] === 'center') {
-            label.style.left = '50%';
-            label.style.transform = 'translateX(-50%)';
-        }
-        box.appendChild(label);
-        menuGrid.appendChild(box);
-    }
-
-    // --- Menu button animation logic ---
-    function animateMenuBtnOut(cb) {
-        // Animate lines to collide and fade out
-        line1.style.transform = 'translateY(8px)';
-        line2.style.transform = 'translateY(-8px)';
-        setTimeout(() => {
-            line1.style.opacity = '0';
-            line2.style.opacity = '0';
-            setTimeout(cb, 350);
-        }, 250);
-    }
-    function resetMenuBtn() {
-        line1.style.transform = '';
-        line2.style.transform = '';
-        line1.style.opacity = '1';
-        line2.style.opacity = '1';
-    }
-
-    // Open/close menu logic
-    menuBtn.onclick = () => {
-        // Save music state before navigating
-        sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
-        sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-        window.location.href = 'room.html';
-    };
-    closeBtn.onclick = () => {
-        menuOverlay.style.opacity = '0';
-        setTimeout(() => menuOverlay.style.display = 'none', 400);
-        menuBtn.style.display = 'flex';
-        closeBtn.style.display = 'none';
-        resetMenuBtn();
-    };
-    // Responsive: hide overlay on resize if needed
-    window.addEventListener('resize', () => {
-        if (menuOverlay.style.display === 'flex') {
-            menuOverlay.style.width = '100vw';
-            menuOverlay.style.height = '100vh';
-        }
-    });
-
-    // --- SHOOTING STAR CURSOR TRAIL ---
-    let starTrail = [];
-    const trailCanvas = document.createElement('canvas');
-    trailCanvas.style.position = 'fixed';
-    trailCanvas.style.top = '0';
-    trailCanvas.style.left = '0';
-    trailCanvas.style.width = '100vw';
-    trailCanvas.style.height = '100vh';
-    trailCanvas.style.pointerEvents = 'none';
-    trailCanvas.style.zIndex = '15';
-    trailCanvas.width = window.innerWidth;
-    trailCanvas.height = window.innerHeight;
-    document.body.appendChild(trailCanvas);
-    window.addEventListener('resize', () => {
-        trailCanvas.width = window.innerWidth;
-        trailCanvas.height = window.innerHeight;
-    });
-    document.addEventListener('mousemove', (e) => {
-        starTrail.push({
-            x: e.clientX,
-            y: e.clientY,
-            t: performance.now()
-        });
-    });
-    function drawTrail() {
-        const ctx = trailCanvas.getContext('2d');
-        ctx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
-        const now = performance.now();
-        // Only keep recent points (last 220ms)
-        starTrail = starTrail.filter(p => now - p.t < 220);
-        for (let i = 0; i < starTrail.length - 1; i++) {
-            const p1 = starTrail[i];
-            const p2 = starTrail[i + 1];
-            const age = (now - p1.t) / 220;
-            ctx.strokeStyle = `rgba(255,224,102,${1 - age})`;
-            ctx.lineWidth = 3.5 * (1 - age) + 1.2;
-            ctx.shadowColor = '#ffe066';
-            ctx.shadowBlur = 12 * (1 - age);
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-        }
-        requestAnimationFrame(drawTrail);
-    }
-    drawTrail();
-
+    
     // --- DIVE IN BUTTON ---
     const diveBtn = document.createElement('button');
     diveBtn.textContent = 'Dive In';
@@ -696,13 +483,12 @@
     };
     document.body.appendChild(diveBtn);
 
-    // --- DIVE IN TRANSITION & IMMERSIVE ROOM ---
+    // --- DIVE IN TRANSITION ---
     diveBtn.onclick = () => {
         // Save current music state before navigating
         sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
         sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
         
-        // Animate zoom into button
         diveBtn.style.transition = 'transform 0.7s cubic-bezier(.77,0,.18,1), box-shadow 0.7s cubic-bezier(.77,0,.18,1), background 0.7s';
         diveBtn.style.transform = 'translate(-50%, 0) scale(18)';
         diveBtn.style.boxShadow = '0 0 0 #ffe06600';
@@ -712,139 +498,7 @@
             window.location.href = 'room.html';
         }, 700);
     };
-
-    // --- IMMERSIVE ROOM SCENE ---
-    function showImmersiveRoom() {
-        // Container
-        const roomContainer = document.createElement('div');
-        roomContainer.id = 'room-container';
-        roomContainer.style.position = 'fixed';
-        roomContainer.style.top = '0';
-        roomContainer.style.left = '0';
-        roomContainer.style.width = '100vw';
-        roomContainer.style.height = '100vh';
-        roomContainer.style.zIndex = '1';
-        document.body.appendChild(roomContainer);
-
-        // Three.js setup
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xeaeaea); // light gray for contrast
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 2.2, 7.5);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        roomContainer.appendChild(renderer.domElement);
-
-        // Lighting
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambient);
-        const spot = new THREE.SpotLight(0xffffff, 1.2, 30, Math.PI/5, 0.4, 1.2);
-        spot.position.set(0, 8, 6);
-        spot.target.position.set(0, 0, 0);
-        scene.add(spot);
-        scene.add(spot.target);
-        const fill = new THREE.PointLight(0xffe066, 0.5, 20);
-        fill.position.set(-4, 3, 6);
-        scene.add(fill);
-
-        // Floor
-        const floorGeo = new THREE.PlaneGeometry(16, 16);
-        const floorMat = new THREE.MeshPhysicalMaterial({ color: 0xd6d6d6, roughness: 0.38, metalness: 0.1 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI/2;
-        floor.position.y = -0.01;
-        scene.add(floor);
-
-        // Table
-        const tableGeo = new THREE.BoxGeometry(5.2, 0.32, 2.8);
-        const tableMat = new THREE.MeshPhysicalMaterial({ color: 0xe0c97f, roughness: 0.22, metalness: 0.18 });
-        const table = new THREE.Mesh(tableGeo, tableMat);
-        table.position.set(0, 0.6, 0);
-        scene.add(table);
-        // Table legs
-        for (let dx of [-1.7, 1.7]) {
-            for (let dz of [-0.8, 0.8]) {
-                const leg = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.09, 0.09, 0.7, 24),
-                    new THREE.MeshPhysicalMaterial({ color: 0xe0d6b6, roughness: 0.3, metalness: 0.1 })
-                );
-                leg.position.set(dx, 0.25, dz);
-                scene.add(leg);
-            }
-        }
-
-        // Books (blog)
-        for (let i = 0; i < 3; i++) {
-            const bookGeo = new THREE.BoxGeometry(0.68, 0.18, 0.9 + 0.22 * i);
-            const bookMat = new THREE.MeshPhysicalMaterial({ color: [0xffe066, 0xf8f6ff, 0x222222][i], roughness: 0.18, metalness: 0.18 });
-            const book = new THREE.Mesh(bookGeo, bookMat);
-            book.position.set(-1.1 + i * 0.9, 0.85, 0.3 + 0.13 * i);
-            book.userData.type = 'blog';
-            scene.add(book);
-        }
-        // Resume (cv)
-        const cvGeo = new THREE.BoxGeometry(1.1, 0.06, 1.5);
-        const cvMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.13, metalness: 0.12 });
-        const cv = new THREE.Mesh(cvGeo, cvMat);
-        cv.position.set(1.7, 0.85, -0.2);
-        cv.userData.type = 'cv';
-        scene.add(cv);
-        // Telephone (contact)
-        const phoneGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.48, 32);
-        const phoneMat = new THREE.MeshPhysicalMaterial({ color: 0x222222, roughness: 0.22, metalness: 0.7 });
-        const phone = new THREE.Mesh(phoneGeo, phoneMat);
-        phone.position.set(-1.9, 0.85, -0.5);
-        phone.userData.type = 'contact';
-        scene.add(phone);
-        // Phone receiver
-        const receiverGeo = new THREE.TorusGeometry(0.25, 0.08, 16, 32, Math.PI);
-        const receiverMat = new THREE.MeshPhysicalMaterial({ color: 0x222222, roughness: 0.18, metalness: 0.7 });
-        const receiver = new THREE.Mesh(receiverGeo, receiverMat);
-        receiver.position.set(-1.9, 1.05, -0.5);
-        receiver.rotation.x = Math.PI/2.1;
-        scene.add(receiver);
-
-        // Interactivity: raycaster
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let hovered = null;
-        renderer.domElement.addEventListener('mousemove', (event) => {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        });
-        renderer.domElement.addEventListener('click', (event) => {
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects([cv, phone, receiver, ...scene.children.filter(o => o.userData.type === 'blog')]);
-            if (intersects.length > 0) {
-                const obj = intersects[0].object;
-                if (obj.userData.type === 'blog') {
-                    alert('Open Blog!');
-                } else if (obj.userData.type === 'cv') {
-                    alert('Open CV!');
-                } else if (obj.userData.type === 'contact') {
-                    alert('Open Contact!');
-                }
-            }
-        });
-
-        // Animate
-        function animateRoom() {
-            requestAnimationFrame(animateRoom);
-            // Subtle floating for objects
-            for (let obj of [cv, phone, receiver, ...scene.children.filter(o => o.userData.type === 'blog')]) {
-                obj.position.y += Math.sin(performance.now() * 0.001 + obj.position.x) * 0.0007;
-            }
-            renderer.render(scene, camera);
-        }
-        animateRoom();
-        // Responsive
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    }
+    
     </script>
 </body>
 </html>

@@ -244,15 +244,13 @@
         </div>
     </div>
     <script>
-    // Music Control Functionality
+    // --- Standardized Music Control ---
     const bgMusic = document.getElementById('bg-music');
     const musicControl = document.getElementById('music-control');
     const musicIcon = document.getElementById('music-icon');
     let musicPlaying = false;
 
-    // Function to start music
     function startMusic() {
-        // Restore volume from session storage
         const savedVolume = sessionStorage.getItem('musicVolume');
         if (savedVolume) {
             bgMusic.volume = parseFloat(savedVolume);
@@ -260,7 +258,6 @@
             bgMusic.volume = 0.7;
         }
         
-        // Check if music was playing from previous page
         const wasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
         if (wasPlaying) {
             bgMusic.play().then(() => {
@@ -275,7 +272,6 @@
         }
     }
 
-    // Function to toggle music
     function toggleMusic() {
         if (musicPlaying) {
             bgMusic.pause();
@@ -289,7 +285,6 @@
         updateMusicIcon();
     }
 
-    // Function to update music icon
     function updateMusicIcon() {
         if (musicPlaying) {
             musicIcon.innerHTML = `
@@ -307,16 +302,10 @@
         }
     }
 
-    // Add event listeners
     musicControl.addEventListener('click', toggleMusic);
-    musicControl.addEventListener('mouseenter', () => {
-        musicControl.style.background = '#ececec';
-    });
-    musicControl.addEventListener('mouseleave', () => {
-        musicControl.style.background = 'none';
-    });
-
-    // Start music when page loads
+    musicControl.addEventListener('mouseenter', () => { musicControl.style.background = '#ececec'; });
+    musicControl.addEventListener('mouseleave', () => { musicControl.style.background = 'none'; });
+    
     startMusic();
 
     document.getElementById('back-btn').onclick = () => {
@@ -325,6 +314,8 @@
         sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
         window.location.href = 'room.html';
     };
+
+    // --- Notes App Logic ---
     // Simulate loading notes from a folder (blogs/). Each note is a JSON file with title, date, content.
     async function loadNotes() {
         // For now, simulate with two placeholder notes
