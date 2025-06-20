@@ -168,8 +168,8 @@
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x181818);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1, 18); // Moved camera back further for bigger screens
-        camera.fov = 65; // Adjusted FoV to reduce distortion
+        camera.position.set(0, 1, 14); // Moved camera forward
+        camera.fov = 50; // Narrowed FoV to reduce peripheral distortion
         camera.updateProjectionMatrix();
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -190,8 +190,8 @@
         // Create movie screens
         const screens = [];
         const numScreens = 5;
-        const screenWidth = 10; // Made screens significantly larger
-        const spacing = 15;    // Increased spacing accordingly
+        const screenWidth = 12; // Made screens larger
+        const spacing = 15;
         const totalWidth = spacing * numScreens; // Total width of all screens including gaps
 
         // Screen content configuration with image paths
@@ -342,8 +342,8 @@
 
         // New animation logic for circular carousel effect
         const clock = new THREE.Clock();
-        const carouselRadius = 18; // The radius of the circle the panels will travel on
-        const scrollSpeed = 0.2; // The speed of rotation in radians per second
+        const carouselRadius = 16; // Brought panels closer to the camera
+        const scrollSpeed = 0.3; // The speed of rotation in radians per second
         let totalRotation = 0;
 
         // Set initial positions and userData
