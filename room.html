@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debajit's Room</title>
     <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
     <style>
         body {
@@ -66,11 +69,19 @@
         }
         #cursor-text {
             color: rgba(255, 255, 255, 0.8);
-            font-family: 'Helvetica', Arial, sans-serif;
+            font-family: 'Playfair Display', serif;
             font-weight: bold;
             font-size: 16px;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+        }
+        
+        /* Social Media Links Hover Effects */
+        #social-links a:hover {
+            background: rgba(255, 224, 102, 0.2) !important;
+            border-color: rgba(255, 224, 102, 0.6) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 224, 102, 0.2);
         }
     </style>
 </head>
@@ -99,17 +110,27 @@
         </svg>
     </button>
     
-    <!-- Menu Button -->
-    <button id="menu-btn" style="position: fixed; top: 32px; right: 36px; z-index: 25; background: none; border: none; cursor: pointer;">
-        <!-- Hamburger Icon SVG -->
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="48" height="48" rx="24" fill="rgba(0,0,0,0.18)"/>
-            <line x1="14" y1="18" x2="34" y2="18" stroke="#ffe066" stroke-width="3"/>
-            <line x1="14" y1="30" x2="34" y2="30" stroke="#ffe066" stroke-width="3"/>
-        </svg>
-    </button>
-
     <div id="three-room"></div>
+    
+    <!-- Social Media Links -->
+    <div id="social-links" style="position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 25; display: flex; gap: 1.5rem; align-items: center;">
+        <a href="https://twitter.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+            Twitter
+        </a>
+        <a href="https://instagram.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+            Instagram
+        </a>
+        <a href="https://github.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+            GitHub
+        </a>
+        <a href="https://linkedin.com/in/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+            LinkedIn
+        </a>
+        <a href="mailto:your.email@example.com" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+            Email
+        </a>
+    </div>
+    
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Music Control Functionality
@@ -225,7 +246,7 @@
             { name: 'BLOG', type: 'blog', image: 'blog.jpg' },
             { name: 'HOME', type: 'home', image: 'home.jpg' },
             { name: 'CV', type: 'cv', image: 'resume.jpg' },
-            { name: 'CONTACT', type: 'contact', image: 'contact.jpg' },
+            { name: 'ABOUT ME', type: 'about', image: 'contact.jpg' },
             { name: 'PROJECTS', type: 'projects', image: 'project.jpeg' }
         ];
 
@@ -407,13 +428,10 @@
                             window.location.href = 'index.html';
                             break;
                         case 'cv':
-                            // Assuming a cv.html or similar might be created
-                            // window.location.href = 'cv.html';
-                            console.log("CV link clicked - page not yet created.");
+                            window.open('https://drive.google.com/file/d/1snFSgrPxnvvpNd6v5OgbXS8R8D1ymrJY/view?usp=sharing', '_blank');
                             break;
-                        case 'contact':
-                            // window.location.href = 'contact.html';
-                            console.log("Contact link clicked - page not yet created.");
+                        case 'about':
+                            window.location.href = 'aboutme.html';
                             break;
                         case 'projects':
                             window.location.href = 'project.html';

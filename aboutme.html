@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me - Debajit</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --text-primary: #2d2d2d;
+            --text-secondary: #6b7280;
+            --bg-primary: #fefbf3;
+            --bg-secondary: #fefbf3;
+            --accent: #d97706;
+            --border: #02060d80;
+            --header-bg: #fefbf3;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* Header Section */
+        .header {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 3rem 3rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 4rem;
+            font-weight: 300;
+            margin: 0;
+            text-align: right;
+            color: var(--text-primary);
+        }
+        
+        /* Main Container */
+        .main-container {
+            margin-top: 100px;
+            padding: 4rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Section Styling */
+        .section {
+            margin-bottom: 4rem;
+        }
+        .section h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+        .section p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Work Experience */
+        .experience-item {
+            margin-bottom: 2.5rem;
+            padding: 2rem;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+        .experience-item h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .experience-item .company {
+            font-size: 1.1rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .experience-item .duration {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        .experience-item .description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        /* Education */
+        .education-item {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+        .education-item h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .education-item .institution {
+            font-size: 1rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .education-item .year {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Embedded Photography Gallery */
+        .gallery-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem; /* Space between arrows and image */
+        }
+        .gallery-wrapper {
+            position: relative;
+            width: 100%;
+            flex-grow: 1;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .gallery-scroller {
+            display: flex;
+            overflow-x: hidden;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        .gallery-scroller .gallery-item {
+            flex: 0 0 100%;
+            width: 100%;
+            scroll-snap-align: center;
+        }
+        .gallery-scroller img {
+            width: 100%;
+            height: 60vh;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-arrow {
+            position: static;
+            transform: none;
+            flex-shrink: 0;
+            background: rgba(254, 251, 243, 0.8);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 50%;
+            width: 60px;
+            height: 48px;
+            cursor: pointer;
+            z-index: 10;
+            color: var(--text-primary);
+            transition: background-color 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-arrow:hover {
+            background: var(--bg-primary);
+            transform: scale(1.1);
+        }
+        .gallery-arrow.prev {
+            /* No specific positioning needed */
+        }
+        .gallery-arrow.next {
+            /* No specific positioning needed */
+        }
+        .gallery-arrow svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--text-primary);
+            stroke-width: 1.5;
+        }
+        .gallery-description {
+            text-align: right;
+            color: var(--text-primary);
+        }
+        .gallery-description p {
+            margin: 0;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            line-height: 1.6;
+        }
+        
+        /* Back Button */
+        #back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            width: 40px;
+            height: 40px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            z-index: 200;
+        }
+        #back-btn:hover,
+        #music-control:hover {
+            background-color: var(--border);
+        }
+    </style>
+</head>
+<body>
+    <button id="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </button>
+
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Music Control Button -->
+    <button id="music-control" style="position: fixed; top: 2rem; left: 5.5rem; width: 40px; height: 40px; background-color: var(--bg-secondary); border: 1px solid var(--border); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background-color 0.2s; z-index: 200;">
+        <svg id="music-icon" width="20" height="20" viewBox="0 0 24 24" style="stroke: var(--text-primary); stroke-width: 2; fill: none;">
+            <!-- Icon will be dynamically updated -->
+        </svg>
+    </button>
+
+    <!-- Header Section -->
+    <header class="header">
+        <h1>About Me</h1>
+    </header>
+
+    <div class="main-container">
+        <!-- Photography Section -->
+        <section class="section">
+            <h2>Glimpses from my life</h2>
+            <div class="gallery-container">
+                <button class="gallery-arrow prev" id="gallery-prev-btn">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div class="gallery-wrapper">
+                    <div class="gallery-scroller" id="gallery-scroller">
+                        <!-- Images are dynamically injected here -->
+                    </div>
+                </div>
+                <button class="gallery-arrow next" id="gallery-next-btn">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+            </div>
+            <div class="gallery-description" id="gallery-description">
+                <!-- Description is dynamically injected here -->
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="section">
+            <h2>About</h2>
+            <p>
+                I'm a passionate software engineer with a love for creating beautiful, functional, and user-centric applications. 
+                With expertise in both frontend and backend development, I enjoy building full-stack solutions that solve real-world problems.
+            </p>
+            <p>
+                When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, 
+                or sharing my knowledge through technical writing and mentoring. I believe in continuous learning and 
+                staying up-to-date with the latest industry trends and best practices.
+            </p>
+        </section>
+
+        <!-- Work Experience Section -->
+        <section class="section">
+            <h2>Work Experience</h2>
+            
+            <div class="experience-item">
+                <h3>Senior Software Engineer</h3>
+                <div class="company">Tech Company Inc.</div>
+                <div class="duration">2023 - Present</div>
+                <div class="description">
+                    Led development of scalable web applications using React, Node.js, and cloud technologies. 
+                    Mentored junior developers and implemented best practices for code quality and performance optimization.
+                </div>
+            </div>
+
+            <div class="experience-item">
+                <h3>Full Stack Developer</h3>
+                <div class="company">Startup Solutions</div>
+                <div class="duration">2021 - 2023</div>
+                <div class="description">
+                    Built and maintained multiple client projects using modern web technologies. 
+                    Collaborated with cross-functional teams to deliver high-quality software solutions.
+                </div>
+            </div>
+
+            <div class="experience-item">
+                <h3>Frontend Developer</h3>
+                <div class="company">Digital Agency</div>
+                <div class="duration">2020 - 2021</div>
+                <div class="description">
+                    Created responsive and interactive user interfaces for various client projects. 
+                    Worked with design teams to implement pixel-perfect designs and ensure excellent user experience.
+                </div>
+            </div>
+        </section>
+
+        <!-- Education Section -->
+        <section class="section">
+            <h2>Education</h2>
+            
+            <div class="education-item">
+                <h3>Master of Science in Computer Science</h3>
+                <div class="institution">University of Technology</div>
+                <div class="year">2018 - 2020</div>
+            </div>
+
+            <div class="education-item">
+                <h3>Bachelor of Engineering in Computer Science</h3>
+                <div class="institution">Engineering College</div>
+                <div class="year">2014 - 2018</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Music Control ---
+            const bgMusic = document.getElementById('bg-music');
+            const musicControl = document.getElementById('music-control');
+            const musicIcon = document.getElementById('music-icon');
+            let musicPlaying = false;
+
+            function startMusic() {
+                const savedVolume = sessionStorage.getItem('musicVolume');
+                if (savedVolume) {
+                    bgMusic.volume = parseFloat(savedVolume);
+                } else {
+                    bgMusic.volume = 0.7;
+                }
+                
+                const wasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
+                if (wasPlaying) {
+                    bgMusic.play().then(() => {
+                        musicPlaying = true;
+                        updateMusicIcon();
+                    }).catch(error => {
+                        console.log('Music autoplay blocked:', error);
+                    });
+                } else {
+                    musicPlaying = false;
+                    updateMusicIcon();
+                }
+            }
+
+            function toggleMusic() {
+                if (musicPlaying) {
+                    bgMusic.pause();
+                    musicPlaying = false;
+                    sessionStorage.setItem('musicPlaying', 'false');
+                } else {
+                    bgMusic.play();
+                    musicPlaying = true;
+                    sessionStorage.setItem('musicPlaying', 'true');
+                }
+                updateMusicIcon();
+            }
+
+            function updateMusicIcon() {
+                if (musicPlaying) {
+                    musicIcon.innerHTML = `
+                        <path d="M9 18V5l12-2v13"/>
+                        <circle cx="6" cy="18" r="3"/>
+                        <circle cx="18" cy="16" r="3"/>
+                    `;
+                } else {
+                    musicIcon.innerHTML = `
+                        <path d="M9 18V5l12-2v13"/>
+                        <circle cx="6"cy="18" r="3"/>
+                        <circle cx="18" cy="16" r="3"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/>
+                    `;
+                }
+            }
+
+            musicControl.addEventListener('click', toggleMusic);
+            
+            document.getElementById('back-btn').addEventListener('click', () => {
+                sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
+                sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
+                window.location.href = 'room.html';
+            });
+
+            startMusic();
+
+
+            // --- Gallery ---
+            const scroller = document.getElementById('gallery-scroller');
+            const descriptionEl = document.getElementById('gallery-description');
+            const nextBtn = document.getElementById('gallery-next-btn');
+            const prevBtn = document.getElementById('gallery-prev-btn');
+
+            let photos = [];
+            let currentIndex = 0;
+
+            async function initializeGallery() {
+                try {
+                    const response = await fetch('photos/gallery.json');
+                    photos = await response.json();
+                    
+                    if (photos.length === 0) throw new Error('No photos found');
+
+                    scroller.innerHTML = photos.map(photo => `
+                        <div class="gallery-item">
+                            <img src="${photo.url}" alt="Photo from gallery">
+                        </div>
+                    `).join('');
+                    
+                    updateGallery(false); // Initial update without smooth scrolling
+
+                } catch (error) {
+                    console.error("Failed to initialize photo gallery:", error);
+                    document.querySelector('.gallery-wrapper').style.display = 'none';
+                    descriptionEl.style.display = 'none';
+                }
+            }
+
+            function updateGallery(useSmoothScroll = true) {
+                // Update description
+                const photoData = photos[currentIndex];
+                descriptionEl.innerHTML = photoData.description
+                    .map(line => `<p>${line}</p>`)
+                    .join('');
+
+                // Scroll to the current image
+                const items = scroller.querySelectorAll('.gallery-item');
+                if (items[currentIndex]) {
+                    items[currentIndex].scrollIntoView({
+                        behavior: useSmoothScroll ? 'smooth' : 'auto',
+                        inline: 'start', // 'center' can sometimes be jumpy, 'start' is more reliable
+                        block: 'nearest'
+                    });
+                }
+            }
+
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % photos.length;
+                updateGallery();
+            });
+
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+                updateGallery();
+            });
+            
+            // Keyboard navigation for the gallery
+            window.addEventListener('keydown', (e) => {
+                if (e.target.tagName.toLowerCase() !== 'body') return; // Only trigger if not in an input field
+
+                if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                } else if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                }
+            });
+
+            initializeGallery();
+        });
+    </script>
+</body>
+</html> 
