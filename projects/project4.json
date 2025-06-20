@@ -1,0 +1,8 @@
+{
+  "title": "Personal Website v3",
+  "year": "2022",
+  "description": "The third iteration of my personal portfolio website, focusing on a clean aesthetic, WebGL animations, and a seamless user experience. Built with vanilla JavaScript and Three.js to keep it lightweight and fast.",
+  "image": "https://source.unsplash.com/random/1200x800?portfolio",
+  "github": "https://github.com/debajit/personal-website",
+  "tech": ["HTML5", "CSS3", "JavaScript", "Three.js"]
+} 

@@ -1,0 +1,8 @@
+{
+  "title": "E-commerce Platform",
+  "year": "2023",
+  "description": "A full-stack e-commerce solution built from the ground up. Features include product management, user authentication, a shopping cart, and Stripe integration for payments. The entire platform is containerized with Docker.",
+  "image": "https://source.unsplash.com/random/1200x800?commerce",
+  "github": "https://github.com/debajit/ecommerce",
+  "tech": ["Django", "PostgreSQL", "React", "Docker", "Stripe API"]
+} 

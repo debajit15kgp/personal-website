@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Debajit</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <style>
+        :root {
+            --text-primary: #2d2d2d;
+            --text-secondary: #6b7280;
+            --bg-primary: #fefbf3;
+            --bg-secondary: #fefbf3;
+            --accent: #d97706;
+            --border: #02060d80;
+            --header-bg: #fefbf3;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* Header Section */
+        .header {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 4rem 4rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 4rem;
+            font-weight: 300;
+            margin: 0;
+            text-align: right;
+            color: var(--text-primary);
+        }
+        
+        /* Main Container */
+        .main-container {
+            display: flex;
+            margin-top: 160px; /* Account for fixed header */
+            min-height: calc(100vh - 160px);
+        }
+        
+        /* Table of Contents */
+        #toc {
+            width: 33.33%;
+            position: fixed;
+            top: 160px;
+            left: 0;
+            height: calc(100vh - 160px);
+            padding: 4rem;
+            box-sizing: border-box;
+            border-right: 1px solid var(--border);
+            background-color: var(--bg-primary);
+        }
+        #toc h2 {
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        #toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #toc li a {
+            display: block;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            padding: 0.75rem 0;
+            transition: color 0.2s;
+        }
+        #toc li a:hover,
+        #toc li a.active {
+            color: var(--text-primary);
+        }
+        
+        /* Projects Section */
+        #projects {
+            width: 66.66%;
+            margin-left: 33.33%;
+            padding: 4rem;
+            box-sizing: border-box;
+        }
+        .project-item {
+            margin-bottom: 8rem;
+        }
+        .project-item:last-child {
+            margin-bottom: 0;
+        }
+        .project-item img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .project-item h3 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .project-year {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        .project-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .tech-item {
+            background-color: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .project-link {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--accent);
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .project-link:hover {
+            color: var(--text-primary);
+        }
+        
+        /* Back Button */
+        #back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            width: 40px;
+            height: 40px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            z-index: 200;
+        }
+        #back-btn:hover {
+            background-color: var(--border);
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <button id="back-btn" onclick="window.location.href='room.html'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </button>
+
+    <!-- Header Section -->
+    <header class="header">
+        <h1>Projects</h1>
+    </header>
+
+    <div class="main-container">
+        <!-- Table of Contents -->
+        <aside id="toc">
+            <h2>Contents</h2>
+            <ul id="toc-list">
+                <li class="loading">Loading projects...</li>
+            </ul>
+        </aside>
+
+        <!-- Projects Section -->
+        <main id="projects">
+            <div class="loading">Loading projects...</div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const projectsContainer = document.getElementById('projects');
+            const tocList = document.getElementById('toc-list');
+            
+            try {
+                // Fetch all project files from the projects folder
+                const projectFiles = [
+                    'projects/project1.json',
+                    'projects/project2.json',
+                    'projects/project3.json',
+                    'projects/project4.json'
+                ];
+                
+                const projects = [];
+                
+                // Load all project files
+                for (let i = 0; i < projectFiles.length; i++) {
+                    try {
+                        const response = await fetch(projectFiles[i]);
+                        if (response.ok) {
+                            const project = await response.json();
+                            project.id = `project-${i + 1}`;
+                            projects.push(project);
+                        }
+                    } catch (error) {
+                        console.error(`Error loading ${projectFiles[i]}:`, error);
+                    }
+                }
+                
+                // Sort projects by year (newest first)
+                projects.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+                
+                // Generate table of contents
+                tocList.innerHTML = '';
+                projects.forEach((project, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = `#${project.id}`;
+                    a.textContent = project.title;
+                    li.appendChild(a);
+                    tocList.appendChild(li);
+                });
+                
+                // Generate project content
+                projectsContainer.innerHTML = '';
+                projects.forEach((project, index) => {
+                    const section = document.createElement('section');
+                    section.id = project.id;
+                    section.className = 'project-item';
+                    
+                    section.innerHTML = `
+                        <h3>${project.title}</h3>
+                        <p class="project-year">${project.year}</p>
+                        <img src="${project.image}" alt="${project.title}">
+                        <p class="project-description">${project.description}</p>
+                        <div class="tech-stack">
+                            ${project.tech.map(tech => `<span class="tech-item">${tech}</span>`).join('')}
+                        </div>
+                        <a href="${project.github}" class="project-link" target="_blank">View on GitHub &rarr;</a>
+                    `;
+                    
+                    projectsContainer.appendChild(section);
+                });
+                
+                // Set up intersection observer for active TOC highlighting
+                const tocLinks = document.querySelectorAll('#toc a');
+                const projectSections = document.querySelectorAll('.project-item');
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            tocLinks.forEach(link => {
+                                link.classList.remove('active');
+                                if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                    link.classList.add('active');
+                                }
+                            });
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                projectSections.forEach(section => {
+                    observer.observe(section);
+                });
+                
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                projectsContainer.innerHTML = '<div class="loading">Error loading projects. Please try again.</div>';
+                tocList.innerHTML = '<li class="loading">Error loading projects</li>';
+            }
+        });
+    </script>
+</body>
+</html> 

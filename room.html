@@ -12,6 +12,7 @@
             overflow: hidden;
             background: linear-gradient(135deg, #181818 0%, #232323 100%);
             min-height: 100vh;
+            cursor: none; /* Hide the default system cursor */
         }
         #back-btn {
             position: fixed;
@@ -49,9 +50,34 @@
             height: 100vh;
             z-index: 1;
         }
+        #custom-cursor {
+            position: fixed;
+            width: 150px;
+            height: 150px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        #cursor-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Helvetica', Arial, sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
+    <div id="custom-cursor">
+        <span id="cursor-text">&lt; DRAG &gt;</span>
+    </div>
     <button id="back-btn" aria-label="Back to main">
         <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: #ffe066; stroke-width: 2.5; fill: none;">
             <path d="M15 5l-7 7 7 7"/>
@@ -352,6 +378,9 @@
         const mouse = new THREE.Vector2();
 
         renderer.domElement.addEventListener('click', (event) => {
+            // Only register a click if the user is not dragging
+            if (isDragging) return;
+
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -365,10 +394,31 @@
                     screenGroup = screenGroup.parent;
                 }
                 
-                if (screenGroup.userData.type === 'blog') {
+                const type = screenGroup.userData.type;
+                if (type) {
                     sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
                     sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-                    window.location.href = 'blog.html';
+                    
+                    switch (type) {
+                        case 'blog':
+                            window.location.href = 'blog.html';
+                            break;
+                        case 'home':
+                            window.location.href = 'index.html';
+                            break;
+                        case 'cv':
+                            // Assuming a cv.html or similar might be created
+                            // window.location.href = 'cv.html';
+                            console.log("CV link clicked - page not yet created.");
+                            break;
+                        case 'contact':
+                            // window.location.href = 'contact.html';
+                            console.log("Contact link clicked - page not yet created.");
+                            break;
+                        case 'projects':
+                            window.location.href = 'project.html';
+                            break;
+                    }
                 }
             }
         });
@@ -376,8 +426,19 @@
         // New animation logic for circular carousel effect
         const clock = new THREE.Clock();
         const carouselRadius = 14; // Brought panels closer to the camera
-        const scrollSpeed = 0.3; // The speed of rotation in radians per second
         let totalRotation = 0;
+        const autoRotateSpeed = 0.1;
+
+        // --- Drag Controls ---
+        let isDragging = false;
+        renderer.domElement.addEventListener('mousedown', () => { isDragging = true; });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dragSpeed = 0.005;
+                totalRotation -= e.movementX * dragSpeed;
+            }
+        });
 
         // Set initial positions and userData
         screens.forEach((screen, i) => {
@@ -388,8 +449,12 @@
             requestAnimationFrame(animate);
 
             const delta = clock.getDelta();
-            totalRotation -= scrollSpeed * delta; // Increment rotation
-
+            
+            // Apply automatic rotation only when not dragging
+            if (!isDragging) {
+                totalRotation -= autoRotateSpeed * delta;
+            }
+            
             screens.forEach((screen) => {
                 const angle = screen.userData.angle + totalRotation;
                 
@@ -404,6 +469,25 @@
 
             renderer.render(scene, camera);
         }
+
+        // --- Custom Cursor Logic ---
+        const cursor = document.getElementById('custom-cursor');
+        window.addEventListener('mousemove', (e) => {
+            if (cursor) {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            }
+        });
+
+        renderer.domElement.addEventListener('mousedown', () => {
+            if (cursor) cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        });
+        renderer.domElement.addEventListener('mouseup', () => {
+            if (cursor) cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+        window.addEventListener('mouseup', () => { // Also listen on window for mouseup
+            if (cursor) cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
 
         // Enhance hover effect
         renderer.domElement.addEventListener('mousemove', (event) => {

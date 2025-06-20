@@ -1,0 +1,8 @@
+{
+  "title": "Generative Art System",
+  "year": "2024",
+  "description": "A web-based platform for creating and exploring generative art. Users can tweak parameters and algorithms to produce unique visual outputs, export high-resolution images, and share their creations with the community.",
+  "image": "https://source.unsplash.com/random/1200x800?abstract",
+  "github": "https://github.com/debajit/generative-art",
+  "tech": ["Three.js", "React", "Node.js", "GLSL"]
+} 

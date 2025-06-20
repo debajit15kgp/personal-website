@@ -1,0 +1,8 @@
+{
+  "title": "Interactive Data Viz",
+  "year": "2023",
+  "description": "An interactive dashboard for visualizing complex climate change data. The project fetches real-time data from multiple APIs and presents it through a series of interactive charts, maps, and graphs built with D3.js.",
+  "image": "https://source.unsplash.com/random/1200x800?data",
+  "github": "https://github.com/debajit/data-viz",
+  "tech": ["D3.js", "Vue.js", "Python", "Flask"]
+} 
