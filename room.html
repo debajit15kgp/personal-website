@@ -190,8 +190,8 @@
         // Create movie screens
         const screens = [];
         const numScreens = 5;
-        const screenWidth = 8; // Made screens significantly larger
-        const spacing = 12;    // Increased spacing accordingly
+        const screenWidth = 10; // Made screens significantly larger
+        const spacing = 15;    // Increased spacing accordingly
         const totalWidth = spacing * numScreens; // Total width of all screens including gaps
 
         // Screen content configuration with image paths
@@ -340,46 +340,32 @@
             }
         });
 
-        // A simpler, more robust animation loop for the carousel
+        // New animation logic for circular carousel effect
         const clock = new THREE.Clock();
+        const carouselRadius = 18; // The radius of the circle the panels will travel on
+        const scrollSpeed = 0.2; // The speed of rotation in radians per second
+        let totalRotation = 0;
+
+        // Set initial positions and userData
+        screens.forEach((screen, i) => {
+            screen.userData.angle = (i / numScreens) * Math.PI * 2;
+        });
 
         function animate() {
             requestAnimationFrame(animate);
 
             const delta = clock.getDelta();
-            const scrollSpeed = 0.8; // Adjust for a comfortable, continuous scroll
+            totalRotation -= scrollSpeed * delta; // Increment rotation
 
             screens.forEach((screen) => {
-                // Move left at a constant speed
-                screen.position.x -= scrollSpeed * delta;
-
-                // Loop the screens around
-                if (screen.position.x < -totalWidth / 2 - spacing) {
-                    screen.position.x += totalWidth + spacing;
-                }
-
-                // --- Fading and scaling based on distance from center ---
-                const dist = Math.abs(screen.position.x);
-                const fadeStart = spacing * 1.5;
-                const fadeEnd = spacing * 2.5;
-
-                // Opacity: Fully visible near the center, fades out at the edges
-                let opacity = 1.0;
-                if (dist > fadeStart) {
-                    opacity = Math.max(0, 1.0 - (dist - fadeStart) / (fadeEnd - fadeStart));
-                }
-
-                // Scale: Smaller at the edges, larger at the center
-                const scale = 1.0 - Math.min(1, dist / fadeEnd) * 0.3;
-                screen.scale.set(scale, scale, scale);
+                const angle = screen.userData.angle + totalRotation;
                 
-                // Apply opacity to all materials in the group
-                screen.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        child.material.opacity = opacity;
-                        child.material.transparent = true;
-                    }
-                });
+                // Calculate position on the circle
+                screen.position.x = carouselRadius * Math.sin(angle);
+                screen.position.z = carouselRadius * Math.cos(angle);
+
+                // Orient the panel to face the center of the scene
+                screen.lookAt(0, 0, 0);
             });
 
             renderer.render(scene, camera);
