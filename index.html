@@ -615,23 +615,51 @@
         window.sessionStorage.removeItem('showRoomScene');
     }
 
+    // Check if we're returning from another page and should show room scene
+    if (window.sessionStorage.getItem('fromOtherPage') === 'true') {
+        showRoomScene = true;
+        window.sessionStorage.removeItem('fromOtherPage');
+    }
+
     // --- IMMEDIATE ROOM SCENE IF FLAG IS SET ---
     if (showRoomScene) {
         document.addEventListener('DOMContentLoaded', () => {
+            // First, load the main scene content (spheres, name, subtitle)
+            renderMainScene();
+            
             if (mainCursor) mainCursor.style.display = 'none';
             // Hide main content and loading overlay
             const mainContent = document.getElementById('main-content');
             const loadingOverlay = document.getElementById('loading-overlay');
             const roomSection = document.getElementById('room-section');
-            if (mainContent) mainContent.style.display = 'none';
+            
+            // Ensure main content is loaded but hidden
+            if (mainContent) {
+                mainContent.style.display = 'flex';
+                mainContent.style.opacity = '0';
+                mainContent.style.pointerEvents = 'none';
+                mainContent.style.transform = 'scale(1.08) translateY(-20px)';
+                mainContent.style.filter = 'blur(12px) brightness(0.7)';
+            }
+            
             if (loadingOverlay) loadingOverlay.style.display = 'none';
             if (roomSection) {
                 roomSection.classList.add('visible');
                 roomSection.style.opacity = '1';
                 roomSection.style.transform = 'translateY(0) scale(1)';
             }
+            
+            // Set room as visible
+            isRoomVisible = true;
+            
             // Initialize the embedded room scene immediately
-            setTimeout(() => { initRoomScene(); }, 10);
+            setTimeout(() => { 
+                initRoomScene(); 
+                // Set scroll position to show room scene after initialization
+                setTimeout(() => {
+                    window.scrollTo(0, window.innerHeight);
+                }, 200);
+            }, 10);
         });
     } else {
         // Call showMainScene or loading logic
@@ -1214,6 +1242,7 @@
                     
                     switch (type) {
                         case 'blog':
+                            window.sessionStorage.setItem('fromOtherPage', 'true');
                             window.location.href = 'blog.html';
                             break;
                         case 'home':
@@ -1221,14 +1250,36 @@
                             // Go back to main content
                             const roomSection = document.getElementById('room-section');
                             const mainContent = document.getElementById('main-content');
+                            const mainCursor = document.getElementById('main-cursor');
+                            const threeContainer = document.getElementById('three-container');
                             
-                            if (roomSection) roomSection.classList.remove('visible');
+                            if (roomSection) {
+                                roomSection.classList.remove('visible');
+                                roomSection.style.opacity = '0';
+                                roomSection.style.transform = 'translateY(100px) scale(0.95)';
+                            }
+                            
                             if (mainContent) {
+                                mainContent.style.display = 'flex';
                                 mainContent.style.opacity = '1';
                                 mainContent.style.pointerEvents = 'auto';
-                                mainContent.style.transform = 'scale(1)';
-                                mainContent.style.filter = 'blur(0px)';
+                                mainContent.style.transform = 'scale(1) translateY(0)';
+                                mainContent.style.filter = 'blur(0px) brightness(1)';
                             }
+                            
+                            // Ensure Three.js container is visible
+                            if (threeContainer) {
+                                threeContainer.style.display = 'block';
+                                threeContainer.style.opacity = '1';
+                            }
+                            
+                            if (mainCursor) {
+                                mainCursor.style.opacity = '1';
+                                mainCursor.style.display = 'block';
+                            }
+                            
+                            // Reset room scene state so it can be re-initialized
+                            roomScene = null;
                             
                             isRoomVisible = false;
                             window.scrollTo(0, 0);
@@ -1237,9 +1288,11 @@
                             window.open('https://drive.google.com/file/d/1snFSgrPxnvvpNd6v5OgbXS8R8D1ymrJY/view?usp=sharing', '_blank');
                             break;
                         case 'about':
+                            window.sessionStorage.setItem('fromOtherPage', 'true');
                             window.location.href = 'aboutme.html';
                             break;
                         case 'projects':
+                            window.sessionStorage.setItem('fromOtherPage', 'true');
                             window.location.href = 'project.html';
                             break;
                     }
