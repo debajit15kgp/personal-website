@@ -15,10 +15,6 @@
             background: #fefbf3;
             color: #232323;
             font-family: 'Didot', serif;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            justify-content: flex-start;
         }
         #back-btn {
             position: fixed;
@@ -62,10 +58,11 @@
             border-right: 1.5px solid #ececec;
             box-shadow: 2px 0 16px #0001;
             position: relative;
+            height: 100%;
         }
         .notes-list {
             flex: 1;
-            padding: 56px 0 0 0;
+            padding: 2rem 0.5rem;
             display: flex;
             flex-direction: column;
             gap: 0.5em;
@@ -170,15 +167,18 @@
         }
         .note-content {
             flex: 1;
-            padding: 64px 6vw 32px 4vw;
+            padding: 2rem 6vw 2rem 4vw;
             background: #fff;
             display: flex;
             flex-direction: column;
             min-width: 0;
             transition: padding-left 0.3s;
+            overflow-y: auto;
+            height: 100%;
+            box-sizing: border-box;
         }
         .note-content.expanded {
-            padding-left: 6vw;
+            padding-left: 2rem;
         }
         .note-content h2 {
             font-family: 'Didot', serif;
@@ -208,126 +208,24 @@
     </style>
 </head>
 <body>
-    <button id="back-btn" aria-label="Back to room">
-        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
-    </button>
-    
-    <!-- Background Music -->
-    <audio id="bg-music" loop>
-        <source src="music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <!-- Music Control Button -->
-    <button id="music-control" style="position: fixed; top: 8px; left: 70px; width: 36px; height: 36px; background: none; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 25; cursor: pointer; transition: background 0.18s;">
-        <svg id="music-icon" width="20" height="20" viewBox="0 0 24 24" style="stroke: #232323; stroke-width: 2; fill: none;">
-            <path d="M9 18V5l12-2v13"/>
-            <circle cx="6" cy="18" r="3"/>
-            <circle cx="18" cy="16" r="3"/>
-        </svg>
-    </button>
-    
-    <div class="container">
+    <div class="notes-app">
         <button id="restore-btn" aria-label="Show notes">
             <svg width="18" height="18" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="#fff" stroke-width="2.2" fill="none"/></svg>
         </button>
         
-        <!-- Home Button -->
-        <button id="home-btn" style="position: fixed; top: 8px; left: 118px; width: 36px; height: 36px; background: none; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 25; cursor: pointer; transition: background 0.18s;">
-            <svg width="20" height="20" viewBox="0 0 24 24" style="stroke: #232323; stroke-width: 2; fill: none;">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
-            </svg>
-        </button>
-        
-        <aside class="sidebar">
-            <div class="notes-list-container">
-                <button id="toggle-notes-list" aria-label="Toggle notes">
-                    <svg id="toggle-arrow" width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="#232323" stroke-width="2.2" fill="none"/></svg>
-                </button>
-                <div class="notes-list" id="notes-list">
-                    <!-- Note titles will be injected here -->
-                </div>
+        <div class="notes-list-container">
+            <button id="toggle-notes-list" aria-label="Toggle notes">
+                <svg id="toggle-arrow" width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="#232323" stroke-width="2.2" fill="none"/></svg>
+            </button>
+            <div class="notes-list" id="notes-list">
+                <!-- Note titles will be injected here -->
             </div>
-        </aside>
+        </div>
         <div class="note-content" id="note-content">
             <!-- Note content will be injected here -->
         </div>
     </div>
     <script>
-    // --- Standardized Music Control ---
-    const bgMusic = document.getElementById('bg-music');
-    const musicControl = document.getElementById('music-control');
-    const musicIcon = document.getElementById('music-icon');
-    let musicPlaying = false;
-
-    function startMusic() {
-        const savedVolume = sessionStorage.getItem('musicVolume');
-        if (savedVolume) {
-            bgMusic.volume = parseFloat(savedVolume);
-        } else {
-            bgMusic.volume = 0.7;
-        }
-        
-        const wasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
-        if (wasPlaying) {
-            bgMusic.play().then(() => {
-                musicPlaying = true;
-                updateMusicIcon();
-            }).catch(error => {
-                console.log('Music autoplay blocked:', error);
-            });
-        } else {
-            musicPlaying = false;
-            updateMusicIcon();
-        }
-    }
-
-    function toggleMusic() {
-        if (musicPlaying) {
-            bgMusic.pause();
-            musicPlaying = false;
-            sessionStorage.setItem('musicPlaying', 'false');
-        } else {
-            bgMusic.play();
-            musicPlaying = true;
-            sessionStorage.setItem('musicPlaying', 'true');
-        }
-        updateMusicIcon();
-    }
-
-    function updateMusicIcon() {
-        if (musicPlaying) {
-            musicIcon.innerHTML = `
-                <path d="M9 18V5l12-2v13"/>
-                <circle cx="6" cy="18" r="3"/>
-                <circle cx="18" cy="16" r="3"/>
-            `;
-        } else {
-            musicIcon.innerHTML = `
-                <path d="M9 18V5l12-2v13"/>
-                <circle cx="6" cy="18" r="3"/>
-                <circle cx="18" cy="16" r="3"/>
-                <line x1="6" y1="6" x2="18" y2="18" stroke="#232323" stroke-width="2"/>
-            `;
-        }
-    }
-
-    musicControl.addEventListener('click', toggleMusic);
-    musicControl.addEventListener('mouseenter', () => { musicControl.style.background = '#ececec'; });
-    musicControl.addEventListener('mouseleave', () => { musicControl.style.background = 'none'; });
-    
-    startMusic();
-
-    document.getElementById('back-btn').onclick = () => {
-        // Save current music state before navigating
-        sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
-        sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-        // Set flag to show room scene on index.html
-        sessionStorage.setItem('showRoomScene', 'true');
-        window.location.href = 'index.html';
-    };
-
     // --- Notes App Logic ---
     // Simulate loading notes from a folder (blogs/). Each note is a JSON file with title, date, content.
     async function loadNotes() {
@@ -384,16 +282,14 @@
         }
     };
 
-    // Home button functionality
-    document.getElementById('home-btn').addEventListener('click', () => {
-        sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
-        sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-        // Set flag to show room scene on index.html
-        sessionStorage.setItem('showRoomScene', 'true');
-        window.location.href = 'index.html';
+    // Keyboard navigation - Escape key to go back to room scene
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            // Set flag to show room scene on index.html
+            sessionStorage.setItem('showRoomScene', 'true');
+            window.location.href = 'index.html';
+        }
     });
-    document.getElementById('home-btn').addEventListener('mouseenter', () => { document.getElementById('home-btn').style.background = '#ececec'; });
-    document.getElementById('home-btn').addEventListener('mouseleave', () => { document.getElementById('home-btn').style.background = 'none'; });
     </script>
 </body>
 </html> 
