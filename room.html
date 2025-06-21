@@ -83,6 +83,89 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(255, 224, 102, 0.2);
         }
+        
+        /* Transition Overlay */
+        #transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%);
+            z-index: 100000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        #transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        /* Screen shake effect */
+        .screen-shake {
+            animation: shake 1.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-20px); }
+            20%, 40%, 60%, 80% { transform: translateX(20px); }
+        }
+        
+        /* Zoom blur effect */
+        .zoom-blur {
+            animation: zoomBlur 2.5s ease-in-out;
+        }
+        
+        @keyframes zoomBlur {
+            0% { 
+                transform: scale(1) blur(0px);
+                filter: blur(0px);
+            }
+            30% { 
+                transform: scale(1.2) blur(3px);
+                filter: blur(3px);
+            }
+            70% { 
+                transform: scale(1.4) blur(8px);
+                filter: blur(8px);
+            }
+            100% { 
+                transform: scale(2) blur(15px);
+                filter: blur(15px);
+            }
+        }
+        
+        /* Flash effect */
+        .flash {
+            animation: flash 1s ease-in-out;
+        }
+        
+        @keyframes flash {
+            0%, 100% { background-color: transparent; }
+            25% { background-color: rgba(255, 224, 102, 0.9); }
+            50% { background-color: rgba(255, 255, 255, 1); }
+            75% { background-color: rgba(255, 224, 102, 0.9); }
+        }
+        
+        /* Curtain effect */
+        .curtain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #181818 0%, #232323 100%);
+            z-index: 99999;
+            transform: translateY(-100%);
+            transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .curtain.active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -94,6 +177,11 @@
     <div id="custom-cursor">
         <span id="cursor-text">&lt; DRAG &gt;</span>
     </div>
+    
+    <!-- Transition Effects -->
+    <div id="transition-overlay"></div>
+    <div class="curtain"></div>
+    
     <button id="back-btn" aria-label="Back to main">
         <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: #ffe066; stroke-width: 2.5; fill: none;">
             <path d="M15 5l-7 7 7 7"/>
@@ -143,6 +231,7 @@
         const musicControl = document.getElementById('music-control');
         const musicIcon = document.getElementById('music-icon');
         let musicPlaying = false;
+        let transitionInProgress = false; // Add transition lock
 
         // Function to start music
         function startMusic() {
@@ -208,13 +297,72 @@
         // Start music when page loads
         startMusic();
 
-        document.getElementById('back-btn').onclick = () => {
+        // Cinematic transition function
+        function triggerCinematicTransition() {
+            if (transitionInProgress) {
+                console.log('🚫 Transition already in progress, ignoring...');
+                return;
+            }
+            
+            transitionInProgress = true;
+            console.log('🎬 Cinematic transition triggered!');
+            
             // Save current music state before navigating
             sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
             sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
             window.sessionStorage.setItem('fromRoom', '1');
-            window.location.href = 'index.html';
-        };
+            
+            const body = document.body;
+            const overlay = document.getElementById('transition-overlay');
+            const curtain = document.querySelector('.curtain');
+            const threeContainer = document.getElementById('three-room');
+            const video = document.getElementById('bg-video');
+            
+            console.log('Elements found:', { overlay, curtain, threeContainer, video });
+            
+            // Step 1: Flash effect (removed screen shake)
+            console.log('Step 1: Flash effect');
+            body.classList.add('flash');
+            
+            // Step 2: Zoom and blur effect
+            setTimeout(() => {
+                console.log('Step 2: Zoom and blur effect');
+                body.classList.remove('flash');
+                if (threeContainer) {
+                    threeContainer.classList.add('zoom-blur');
+                    threeContainer.style.zIndex = '1';
+                }
+                if (video) {
+                    video.style.filter = 'blur(5px)';
+                    video.style.zIndex = '1';
+                }
+            }, 200);
+            
+            // Step 3: Activate transition overlay
+            setTimeout(() => {
+                console.log('Step 3: Activate transition overlay');
+                if (overlay) {
+                    overlay.classList.add('active');
+                    overlay.style.zIndex = '100000';
+                }
+            }, 400);
+            
+            // Step 4: Navigate to index.html (removed curtain effect)
+            setTimeout(() => {
+                console.log('Step 4: Navigating to index.html');
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+
+        document.getElementById('back-btn').onclick = triggerCinematicTransition;
+        
+        // // Test transition button (temporary)
+        // document.getElementById('test-transition').onclick = triggerCinematicTransition;
+        
+        // // Make transition function globally accessible for debugging
+        // window.testTransition = triggerCinematicTransition;
+        // console.log('🔧 Transition function available globally as: window.testTransition()');
+        
         // Three.js setup
         const container = document.getElementById('three-room');
         const scene = new THREE.Scene();
@@ -430,7 +578,8 @@
                             window.location.href = 'blog.html';
                             break;
                         case 'home':
-                            window.location.href = 'index.html';
+                            console.log('🏠 Home screen clicked! Triggering transition...');
+                            triggerCinematicTransition();
                             break;
                         case 'cv':
                             window.open('https://drive.google.com/file/d/1snFSgrPxnvvpNd6v5OgbXS8R8D1ymrJY/view?usp=sharing', '_blank');

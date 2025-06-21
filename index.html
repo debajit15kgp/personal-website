@@ -12,15 +12,12 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             font-family: 'Playfair Display', serif;
             background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
             color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            min-height: 200vh;
         }
         canvas {
             display: block;
@@ -321,11 +318,11 @@
         subtitleDiv.style.top = 'calc(50% + 3.2em)';
         subtitleDiv.style.left = '50%';
         subtitleDiv.style.transform = 'translate(-50%, 0)';
-        subtitleDiv.style.color = '#ffe066';
+        subtitleDiv.style.color = '#000000';
         subtitleDiv.style.fontSize = '1.6em';
-        subtitleDiv.style.fontWeight = '400';
+        subtitleDiv.style.fontWeight = '700';
         subtitleDiv.style.letterSpacing = '0.04em';
-        subtitleDiv.style.textShadow = '0 1px 8px #000a';
+        subtitleDiv.style.textShadow = '0 2px 12px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 255, 255, 0.6)';
         subtitleDiv.style.zIndex = '10';
         subtitleDiv.style.fontFamily = 'Inter, sans-serif';
         subtitleDiv.style.pointerEvents = 'none';
@@ -502,8 +499,8 @@
     diveBtn.style.top = 'calc(50% + 7.2em)';
     diveBtn.style.left = '50%';
     diveBtn.style.transform = 'translate(-50%, 0)';
-    diveBtn.style.background = 'linear-gradient(90deg, #ffe066 60%, #fffbe6 100%)';
-    diveBtn.style.color = '#222';
+    diveBtn.style.background = 'linear-gradient(90deg, #c0c0c0 60%, #e8e8e8 100%)';
+    diveBtn.style.color = '#333';
     diveBtn.style.fontFamily = 'Gateway, Inter, sans-serif';
     diveBtn.style.fontWeight = 'bold';
     diveBtn.style.fontSize = '2.2em';
@@ -511,17 +508,17 @@
     diveBtn.style.padding = '0.6em 2.2em';
     diveBtn.style.border = 'none';
     diveBtn.style.borderRadius = '1.6em';
-    diveBtn.style.boxShadow = '0 8px 48px #ffe06644, 0 2px 8px #0002';
+    diveBtn.style.boxShadow = '0 8px 48px #c0c0c044, 0 2px 8px #0002';
     diveBtn.style.cursor = 'pointer';
     diveBtn.style.zIndex = '12';
     diveBtn.style.transition = 'transform 0.18s, box-shadow 0.18s, background 0.18s';
     diveBtn.onmouseenter = () => {
         diveBtn.style.transform = 'translate(-50%, 0) scale(1.06)';
-        diveBtn.style.boxShadow = '0 12px 64px #ffe06677, 0 2px 8px #0002';
+        diveBtn.style.boxShadow = '0 12px 64px #c0c0c077, 0 2px 8px #0002';
     };
     diveBtn.onmouseleave = () => {
         diveBtn.style.transform = 'translate(-50%, 0) scale(1)';
-        diveBtn.style.boxShadow = '0 8px 48px #ffe06644, 0 2px 8px #0002';
+        diveBtn.style.boxShadow = '0 8px 48px #c0c0c044, 0 2px 8px #0002';
     };
     document.body.appendChild(diveBtn);
 
@@ -546,7 +543,7 @@
             bgVideo.play().then(() => {
                 setTimeout(() => {
                     bgVideo.playbackRate = 15;
-                }, 100);
+                }, 200);
             });
         }
 
@@ -559,15 +556,15 @@
             setTimeout(() => {
                 curtainLeft.classList.add('in');
                 curtainRight.classList.add('in');
-            }, 350);
+            }, 300);
             setTimeout(() => {
                 flash.classList.add('in');
-            }, 1100);
+            }, 600);
             setTimeout(() => {
                 if (bgVideo) bgVideo.playbackRate = 1;
                 window.location.href = 'room.html';
-            }, 1550);
-        }, 1000);
+            }, 1000);
+        }, 200);
     };
     
     </script>
