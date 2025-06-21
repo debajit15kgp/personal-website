@@ -19,6 +19,28 @@
             color: #ffffff;
             min-height: 200vh;
         }
+
+        #main-cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            z-index: 10001;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            transition: width 0.3s ease, height 0.3s ease, opacity 0.5s ease;
+            filter: blur(1px);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+        }
+
+        #main-cursor.hover {
+            width: 24px;
+            height: 24px;
+            filter: blur(1.5px);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
         
         /* Main page container */
         #main-page {
@@ -403,6 +425,7 @@
     </style>
 </head>
 <body id="main-body" style="background: transparent; margin: 0; min-height: 100vh;">
+    <div id="main-cursor"></div>
     <video id="bg-video" autoplay loop muted playsinline
       style="position: fixed; top: 0; left: 0; min-width: 100vw; min-height: 100vh; object-fit: cover; z-index: 0;">
       <source src="assets/bgvideo.mp4" type="video/mp4">
@@ -451,6 +474,39 @@
     
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
     <script>
+    // --- MAIN PAGE CUSTOM CURSOR ---
+    const mainCursor = document.getElementById('main-cursor');
+    if (mainCursor) {
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+        const speed = 0.1;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateMainCursor() {
+            cursorX += (mouseX - cursorX) * speed;
+            cursorY += (mouseY - cursorY) * speed;
+            mainCursor.style.left = cursorX + 'px';
+            mainCursor.style.top = cursorY + 'px';
+            requestAnimationFrame(animateMainCursor);
+        }
+        animateMainCursor();
+
+        // Add hover effect for links and buttons
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                // Only show hover effect when main content is visible
+                if (!isRoomVisible) mainCursor.classList.add('hover');
+            });
+            el.addEventListener('mouseleave', () => {
+                mainCursor.classList.remove('hover');
+            });
+        });
+    }
+
     // --- SCROLL-BASED TRANSITION VARIABLES ---
     let roomScene = null;
     let isRoomVisible = false;
@@ -562,6 +618,7 @@
     // --- IMMEDIATE ROOM SCENE IF FLAG IS SET ---
     if (showRoomScene) {
         document.addEventListener('DOMContentLoaded', () => {
+            if (mainCursor) mainCursor.style.display = 'none';
             // Hide main content and loading overlay
             const mainContent = document.getElementById('main-content');
             const loadingOverlay = document.getElementById('loading-overlay');
@@ -1279,6 +1336,7 @@
         if (scrollY > scrollThreshold) {
             if (!isRoomVisible) {
                 isRoomVisible = true;
+                if (mainCursor) mainCursor.style.opacity = '0';
                 console.log('🎬 Starting room transition...');
                 
                 // Progressive main content fade out
@@ -1322,6 +1380,7 @@
         } else {
             if (isRoomVisible) {
                 isRoomVisible = false;
+                if (mainCursor) mainCursor.style.opacity = '1';
                 console.log('🔄 Reverting to main content...');
                 
                 // Smooth room section fade out
