@@ -161,7 +161,6 @@
             width: 100%;
             height: 100%;
             position: relative;
-            background: blue; /* Debug: make it visible */
         }
         
         /* Main content transitions */
@@ -199,6 +198,103 @@
         
         .room-overlay.active {
             opacity: 1;
+        }
+        
+        /* Room-specific styles */
+        #custom-cursor {
+            position: fixed;
+            width: 150px;
+            height: 150px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        
+        #cursor-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        
+        #transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%);
+            z-index: 100000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        #transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .curtain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #181818 0%, #232323 100%);
+            z-index: 99999;
+            transform: translateY(-100%);
+            transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .curtain.active {
+            transform: translateY(0);
+        }
+        
+        #back-btn {
+            position: fixed;
+            top: 32px;
+            left: 36px;
+            width: 54px;
+            height: 54px;
+            background: rgba(0,0,0,0.18);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        #back-btn:hover {
+            background: rgba(255,224,102,0.12);
+        }
+        
+        #three-room {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        /* Social Media Links Hover Effects */
+        #social-links a:hover {
+            background: rgba(255, 224, 102, 0.2) !important;
+            border-color: rgba(255, 224, 102, 0.6) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 224, 102, 0.2);
         }
         
         .scroll-indicator {
@@ -270,10 +366,7 @@
     <!-- Room Section -->
     <div id="room-section">
         <div id="room-container">
-            <!-- Test element to see if room container is visible -->
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 2em; z-index: 1000; background: red; padding: 20px;">
-                ROOM CONTENT LOADED
-            </div>
+            <!-- Room content will be loaded here dynamically -->
         </div>
         <div class="room-overlay"></div>
     </div>
@@ -645,81 +738,400 @@
     
     // --- SCROLL-BASED TRANSITION ---
     
+    // Initialize room scene (simplified - no dynamic loading)
     function initRoomScene() {
-        const roomContainer = document.getElementById('room-container');
-        if (!roomContainer || roomScene) {
+        if (roomScene && roomScene.loaded) {
             console.log('🚫 Room scene already loaded or container not found');
             return;
         }
         
-        console.log('🔄 Loading room.html content...');
+        console.log('🎬 Initializing embedded room scene...');
         
-        // Load room.html content directly
-        fetch('room.html')
-            .then(response => {
-                console.log('📡 Response status:', response.status);
-                return response.text();
-            })
-            .then(html => {
-                console.log('📄 Room.html content fetched, length:', html.length);
+        // Get the room container
+        const roomContainer = document.getElementById('room-container');
+        if (!roomContainer) {
+            console.log('❌ Room container not found');
+            return;
+        }
+        
+        // Clear any existing content
+        roomContainer.innerHTML = '';
+        
+        // Create the room content directly
+        const roomContent = document.createElement('div');
+        roomContent.innerHTML = `
+            <div id="custom-cursor">
+                <span id="cursor-text">&lt; DRAG &gt;</span>
+            </div>
+            
+            <!-- Transition Effects -->
+            <div id="transition-overlay"></div>
+            <div class="curtain"></div>
+            
+            <button id="back-btn" aria-label="Back to main">
+                <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: #ffe066; stroke-width: 2.5; fill: none;">
+                    <path d="M15 5l-7 7 7 7"/>
+                </svg>
+            </button>
+            
+            <div id="three-room"></div>
+            
+            <!-- Social Media Links -->
+            <div id="social-links" style="position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 25; display: flex; gap: 1.5rem; align-items: center;">
+                <a href="https://twitter.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+                    Twitter
+                </a>
+                <a href="https://instagram.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+                    Instagram
+                </a>
+                <a href="https://github.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+                    GitHub
+                </a>
+                <a href="https://linkedin.com/in/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+                    LinkedIn
+                </a>
+                <a href="mailto:your.email@example.com" style="color: #ffe066; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
+                    Email
+                </a>
+            </div>
+        `;
+        
+        roomContent.style.width = '100%';
+        roomContent.style.height = '100%';
+        roomContent.style.position = 'absolute';
+        roomContent.style.top = '0';
+        roomContent.style.left = '0';
+        roomContent.style.zIndex = '15';
+        
+        roomContainer.appendChild(roomContent);
+        console.log('📦 Room content added to container');
+        
+        // Initialize Three.js scene
+        initThreeJSScene();
+        
+        // Set up back button functionality
+        const backBtn = roomContent.querySelector('#back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                console.log('🔙 Back button clicked');
+                // Simple transition back to main content
+                const roomSection = document.getElementById('room-section');
+                const mainContent = document.getElementById('main-content');
                 
-                // Create a temporary div to parse the HTML
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                
-                // Extract the body content from room.html
-                const roomBody = tempDiv.querySelector('body');
-                if (roomBody) {
-                    console.log('✅ Room body content found');
-                    
-                    // Remove the body tag but keep its contents
-                    const roomContent = document.createElement('div');
-                    roomContent.innerHTML = roomBody.innerHTML;
-                    roomContent.style.width = '100%';
-                    roomContent.style.height = '100%';
-                    roomContent.style.position = 'absolute';
-                    roomContent.style.top = '0';
-                    roomContent.style.left = '0';
-                    roomContent.style.zIndex = '1';
-                    
-                    // Add room.html styles
-                    const roomStyles = tempDiv.querySelector('style');
-                    if (roomStyles) {
-                        const styleSheet = document.createElement('style');
-                        styleSheet.textContent = roomStyles.textContent;
-                        document.head.appendChild(styleSheet);
-                        console.log('🎨 Room styles added');
-                    }
-                    
-                    roomContainer.appendChild(roomContent);
-                    console.log('📦 Room content added to container');
-                    
-                    // Execute room.html scripts
-                    const roomScripts = tempDiv.querySelectorAll('script');
-                    roomScripts.forEach(script => {
-                        if (script.src) {
-                            // External script
-                            const newScript = document.createElement('script');
-                            newScript.src = script.src;
-                            document.head.appendChild(newScript);
-                        } else {
-                            // Inline script
-                            const newScript = document.createElement('script');
-                            newScript.textContent = script.textContent;
-                            document.head.appendChild(newScript);
-                        }
-                    });
-                    console.log('📜 Room scripts executed');
-                } else {
-                    console.log('❌ Room body content not found');
+                if (roomSection) roomSection.classList.remove('visible');
+                if (mainContent) {
+                    mainContent.style.opacity = '1';
+                    mainContent.style.pointerEvents = 'auto';
+                    mainContent.style.transform = 'scale(1)';
+                    mainContent.style.filter = 'blur(0px)';
                 }
-            })
-            .catch(error => {
-                console.error('❌ Error loading room.html:', error);
+                
+                isRoomVisible = false;
+                window.scrollTo(0, 0);
             });
+        }
         
         roomScene = { loaded: true };
         console.log('✅ Room scene initialized');
+    }
+    
+    // Initialize Three.js scene for the room
+    function initThreeJSScene() {
+        const container = document.getElementById('three-room');
+        if (!container) {
+            console.log('❌ Three.js container not found');
+            return;
+        }
+        
+        console.log('🎨 Initializing Three.js scene...');
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x181818);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 14);
+        camera.fov = 50;
+        camera.updateProjectionMatrix();
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+        
+        // Basic lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(0, 10, 10);
+        scene.add(mainLight);
+        
+        // Create movie screens
+        const screens = [];
+        const numScreens = 5;
+        const screenWidth = 10;
+        const spacing = 5;
+        
+        // Screen content configuration with image paths
+        const screenConfigs = [
+            { name: 'BLOG', type: 'blog', image: 'blog.jpg' },
+            { name: 'HOME', type: 'home', image: 'home.jpg' },
+            { name: 'CV', type: 'cv', image: 'resume.jpg' },
+            { name: 'ABOUT ME', type: 'about', image: 'contact.jpg' },
+            { name: 'PROJECTS', type: 'projects', image: 'project.jpeg' }
+        ];
+        
+        const textureLoader = new THREE.TextureLoader();
+        
+        // Function to create a canvas-based alpha map for the rounded corners
+        function createAlphaMap(width, height, radius) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const resolution = 256;
+            canvas.width = resolution;
+            canvas.height = resolution;
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const r = radius * (resolution / Math.max(width, height));
+            
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, w, h);
+            
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.lineTo(w - r, 0);
+            ctx.quadraticCurveTo(w, 0, w, r);
+            ctx.lineTo(w, h - r);
+            ctx.quadraticCurveTo(w, h, w - r, h);
+            ctx.lineTo(r, h);
+            ctx.quadraticCurveTo(0, h, 0, h - r);
+            ctx.lineTo(0, r);
+            ctx.quadraticCurveTo(0, 0, r, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+        
+        // Function to create a text texture
+        function createTextTexture(text) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const resolution = 256;
+            canvas.width = resolution * 2;
+            canvas.height = resolution / 2;
+            
+            ctx.font = `bold ${resolution / 6}px 'Helvetica', Arial, sans-serif`;
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+        
+        for (let i = 0; i < numScreens; i++) {
+            const screenGroup = new THREE.Group();
+            
+            // Define the dimensions of our panel
+            const displayWidth = screenWidth * 1.5;
+            const displayHeight = screenWidth * 1.3;
+            
+            // Use a simple PlaneGeometry for clean texture mapping
+            const displayGeo = new THREE.PlaneGeometry(displayWidth, displayHeight);
+            
+            // Load the main image texture and apply the "cover" transformation
+            const texture = textureLoader.load(screenConfigs[i].image, (tex) => {
+                const imageAspect = tex.image.width / tex.image.height;
+                const displayAspect = displayWidth / displayHeight;
+                
+                tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+                
+                if (imageAspect > displayAspect) {
+                    tex.repeat.x = displayAspect / imageAspect;
+                    tex.repeat.y = 1;
+                    tex.offset.x = (1 - tex.repeat.x) / 2;
+                    tex.offset.y = 0;
+                } else {
+                    tex.repeat.x = 1;
+                    tex.repeat.y = imageAspect / displayAspect;
+                    tex.offset.x = 0;
+                    tex.offset.y = (1 - tex.repeat.y) / 2;
+                }
+            });
+            
+            // Create the material with the image and the alpha map for rounded corners
+            const displayMat = new THREE.MeshStandardMaterial({
+                map: texture,
+                alphaMap: createAlphaMap(displayWidth, displayHeight, 0.3),
+                transparent: true,
+                roughness: 0.6,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+            
+            const display = new THREE.Mesh(displayGeo, displayMat);
+            screenGroup.add(display);
+            
+            // Add a text label
+            const textTexture = createTextTexture(screenConfigs[i].name);
+            const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
+            const textPlaneHeight = displayHeight * 0.15;
+            const textGeo = new THREE.PlaneGeometry(displayWidth * 0.5, textPlaneHeight);
+            const textPlane = new THREE.Mesh(textGeo, textMat);
+            textPlane.position.y = -(displayHeight / 2) - (textPlaneHeight / 2) - 0.2;
+            textPlane.position.z = 0.01;
+            screenGroup.add(textPlane);
+            
+            // Set initial position
+            const xPos = (i - (numScreens - 1) / 2) * spacing;
+            screenGroup.position.set(xPos, 1.5, 0);
+            screenGroup.userData.type = screenConfigs[i].type;
+            screenGroup.userData.initialX = xPos;
+            screenGroup.userData.index = i;
+            scene.add(screenGroup);
+            screens.push(screenGroup);
+        }
+        
+        // Add some fill lights to ensure visibility
+        const fillLight1 = new THREE.PointLight(0xffffff, 0.3, 50);
+        fillLight1.position.set(-5, 5, 8);
+        scene.add(fillLight1);
+        
+        const fillLight2 = new THREE.PointLight(0xffffff, 0.3, 50);
+        fillLight2.position.set(5, 5, 8);
+        scene.add(fillLight2);
+        
+        // Click interaction
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        renderer.domElement.addEventListener('click', (event) => {
+            if (isDragging) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                let screenGroup = intersects[0].object;
+                while (screenGroup.parent && screenGroup.parent !== scene) {
+                    screenGroup = screenGroup.parent;
+                }
+                
+                const type = screenGroup.userData.type;
+                if (type) {
+                    console.log('🎯 Screen clicked:', type);
+                    
+                    switch (type) {
+                        case 'blog':
+                            window.location.href = 'blog.html';
+                            break;
+                        case 'home':
+                            console.log('🏠 Home screen clicked! Going back to main...');
+                            // Go back to main content
+                            const roomSection = document.getElementById('room-section');
+                            const mainContent = document.getElementById('main-content');
+                            
+                            if (roomSection) roomSection.classList.remove('visible');
+                            if (mainContent) {
+                                mainContent.style.opacity = '1';
+                                mainContent.style.pointerEvents = 'auto';
+                                mainContent.style.transform = 'scale(1)';
+                                mainContent.style.filter = 'blur(0px)';
+                            }
+                            
+                            isRoomVisible = false;
+                            window.scrollTo(0, 0);
+                            break;
+                        case 'cv':
+                            window.open('https://drive.google.com/file/d/1snFSgrPxnvvpNd6v5OgbXS8R8D1ymrJY/view?usp=sharing', '_blank');
+                            break;
+                        case 'about':
+                            window.location.href = 'aboutme.html';
+                            break;
+                        case 'projects':
+                            window.location.href = 'project.html';
+                            break;
+                    }
+                }
+            }
+        });
+        
+        // Animation
+        const clock = new THREE.Clock();
+        let totalRotation = 0;
+        const autoRotateSpeed = 0.1;
+        let isDragging = false;
+        
+        // Drag controls
+        renderer.domElement.addEventListener('mousedown', () => { isDragging = true; });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dragSpeed = 0.005;
+                totalRotation -= e.movementX * dragSpeed;
+            }
+        });
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (!isDragging) {
+                totalRotation -= autoRotateSpeed * delta;
+            }
+            
+            screens.forEach((screen) => {
+                const angle = screen.userData.index / numScreens * Math.PI * 2 + totalRotation;
+                const radius = 14;
+                
+                screen.position.x = radius * Math.sin(angle);
+                screen.position.z = radius * Math.cos(angle);
+                screen.position.y = 2;
+                
+                screen.lookAt(0, screen.position.y, 0);
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Custom cursor functionality
+        const cursor = document.getElementById('custom-cursor');
+        if (cursor) {
+            window.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+            
+            renderer.domElement.addEventListener('mousedown', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            });
+            
+            renderer.domElement.addEventListener('mouseup', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+            
+            window.addEventListener('mouseup', () => {
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+        }
+        
+        console.log('🎨 Three.js scene initialized');
     }
     
     // Scroll event handler
@@ -750,7 +1162,8 @@
                 // Add overlay effect
                 setTimeout(() => {
                     const overlay = document.querySelector('.room-overlay');
-                    overlay.classList.add('active');
+                    // overlay.classList.add('active'); // Temporarily disabled to test
+                    console.log('🔍 Room overlay found:', !!overlay);
                 }, 500);
             }
         } else {
