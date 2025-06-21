@@ -296,14 +296,18 @@
             document.getElementById('back-btn').addEventListener('click', () => {
                 sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
                 sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-                window.location.href = 'room.html';
+                // Set flag to show room scene on index.html
+                sessionStorage.setItem('showRoomScene', 'true');
+                window.location.href = 'index.html';
             });
 
             // Home button functionality
             document.getElementById('home-btn').addEventListener('click', () => {
                 sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
                 sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-                window.location.href = 'room.html';
+                // Set flag to show room scene on index.html
+                sessionStorage.setItem('showRoomScene', 'true');
+                window.location.href = 'index.html';
             });
             document.getElementById('home-btn').addEventListener('mouseenter', () => { document.getElementById('home-btn').style.backgroundColor = 'var(--border)'; });
             document.getElementById('home-btn').addEventListener('mouseleave', () => { document.getElementById('home-btn').style.backgroundColor = 'var(--bg-secondary)'; });

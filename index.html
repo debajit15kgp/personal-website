@@ -179,17 +179,31 @@
         /* Enhanced scroll indicator transitions */
         .scroll-indicator {
             position: fixed;
-            bottom: 40px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            color: #ffe066;
-            font-size: 1.2em;
-            font-weight: 500;
+            color: #ffffff;
             text-align: center;
             z-index: 50;
             opacity: 0.8;
-            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: opacity 0.8s, transform 0.8s;
+            padding-top: 80px;
+            width: 380px;
+            background: none;
+            border: none;
+        }
+
+        .scroll-indicator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 260px;
+            height: 130px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-bottom: none;
+            border-radius: 130px 130px 0 0;
         }
         
         .scroll-indicator.hidden {
@@ -197,35 +211,9 @@
             transform: translateX(-50%) translateY(20px);
         }
         
-        .scroll-arrow {
-            display: block;
-            font-size: 2em;
-            margin-top: 10px;
-            animation: bounce 2s infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-        
-        /* Enhanced room overlay */
-        .room-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%);
-            opacity: 0;
-            transition: opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            z-index: -1;
-        }
-        
-        .room-overlay.active {
-            opacity: 1;
-        }
+        /* Remove unused styles */
+        @keyframes bounce { }
+        .scroll-arrow { display: none; }
         
         /* Smooth button transitions */
         button {
@@ -381,7 +369,7 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            color: #ffe066;
+            color: #fcfbf6;
             font-size: 1.2em;
             font-weight: 500;
             text-align: center;
@@ -405,6 +393,12 @@
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
             40% { transform: translateY(-10px); }
             60% { transform: translateY(-5px); }
+        }
+        .scroll-indicator span {
+            font-size: 12px !important; /* Use pixels and !important for specificity */
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
         }
     </style>
 </head>
@@ -437,8 +431,7 @@
         </button>
         <!-- Scroll Indicator -->
         <div class="scroll-indicator">
-            <span>Scroll to explore</span>
-            <span class="scroll-arrow">↓</span>
+            <span>SCROLL DOWN</span>
         </div>
     </div>
     
@@ -557,6 +550,45 @@
     if (window.sessionStorage.getItem('fromRoom') === '1') {
         skipLoading = true;
         window.sessionStorage.removeItem('fromRoom');
+    }
+
+    // Check if we should show room scene (coming back from other pages)
+    let showRoomScene = false;
+    if (window.sessionStorage.getItem('showRoomScene') === 'true') {
+        showRoomScene = true;
+        window.sessionStorage.removeItem('showRoomScene');
+    }
+
+    // --- IMMEDIATE ROOM SCENE IF FLAG IS SET ---
+    if (showRoomScene) {
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hide main content and loading overlay
+            const mainContent = document.getElementById('main-content');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const roomSection = document.getElementById('room-section');
+            if (mainContent) mainContent.style.display = 'none';
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            if (roomSection) {
+                roomSection.classList.add('visible');
+                roomSection.style.opacity = '1';
+                roomSection.style.transform = 'translateY(0) scale(1)';
+            }
+            // Initialize the embedded room scene immediately
+            setTimeout(() => { initRoomScene(); }, 10);
+        });
+    } else {
+        // Call showMainScene or loading logic
+        if (skipLoading) {
+            console.log('⏭️ Skipping loading, calling fadeOutAndRemoveLoadingOverlay and renderMainScene');
+            fadeOutAndRemoveLoadingOverlay();
+            renderMainScene();
+        } else {
+            console.log('⏳ Loading enabled, will call renderMainScene in 1.2s');
+            setTimeout(() => {
+                console.log('⏰ Timeout finished, calling renderMainScene');
+                renderMainScene();
+            }, 1200);
+        }
     }
 
     function fadeOutAndRemoveLoadingOverlay() {
@@ -802,19 +834,6 @@
         fadeOutAndRemoveLoadingOverlay();
     }
 
-    // Call showMainScene or loading logic
-    if (skipLoading) {
-        console.log('⏭️ Skipping loading, calling fadeOutAndRemoveLoadingOverlay and renderMainScene');
-        fadeOutAndRemoveLoadingOverlay();
-        renderMainScene();
-    } else {
-        console.log('⏳ Loading enabled, will call renderMainScene in 1.2s');
-        setTimeout(() => {
-            console.log('⏰ Timeout finished, calling renderMainScene');
-            renderMainScene();
-        }, 1200);
-    }
-    
     // --- SCROLL-BASED TRANSITION ---
     
     // Initialize room scene (simplified - no dynamic loading)
@@ -1377,84 +1396,6 @@
     window.addEventListener('resize', () => {
         // Iframe will handle its own resizing
     });
-    
-    // --- DIVE IN BUTTON ---
-    const diveBtn = document.createElement('button');
-    diveBtn.textContent = 'Dive In';
-    diveBtn.style.position = 'fixed';
-    diveBtn.style.top = 'calc(50% + 7.2em)';
-    diveBtn.style.left = '50%';
-    diveBtn.style.transform = 'translate(-50%, 0)';
-    diveBtn.style.background = 'linear-gradient(90deg, #c0c0c0 60%, #e8e8e8 100%)';
-    diveBtn.style.color = '#333';
-    diveBtn.style.fontFamily = 'Gateway, Didot, serif';
-    diveBtn.style.fontWeight = 'bold';
-    diveBtn.style.fontSize = '2.2em';
-    diveBtn.style.letterSpacing = '0.08em';
-    diveBtn.style.padding = '0.6em 2.2em';
-    diveBtn.style.border = 'none';
-    diveBtn.style.borderRadius = '1.6em';
-    diveBtn.style.boxShadow = '0 8px 48px #c0c0c044, 0 2px 8px #0002';
-    diveBtn.style.cursor = 'pointer';
-    diveBtn.style.zIndex = '12';
-    diveBtn.style.transition = 'transform 0.18s, box-shadow 0.18s, background 0.18s';
-    diveBtn.onmouseenter = () => {
-        diveBtn.style.transform = 'translate(-50%, 0) scale(1.06)';
-        diveBtn.style.boxShadow = '0 12px 64px #c0c0c077, 0 2px 8px #0002';
-    };
-    diveBtn.onmouseleave = () => {
-        diveBtn.style.transform = 'translate(-50%, 0) scale(1)';
-        diveBtn.style.boxShadow = '0 8px 48px #c0c0c044, 0 2px 8px #0002';
-    };
-    
-    // Add dive button to main-content container instead of body
-    const mainContent = document.getElementById('main-content');
-    mainContent.appendChild(diveBtn);
-
-    // --- DIVE IN TRANSITION ---
-    // Add curtains and flash elements to main-content as well
-    const curtainLeft = document.createElement('div');
-    curtainLeft.className = 'curtain left';
-    mainContent.appendChild(curtainLeft);
-    const curtainRight = document.createElement('div');
-    curtainRight.className = 'curtain right';
-    mainContent.appendChild(curtainRight);
-    const flash = document.createElement('div');
-    flash.className = 'flash';
-    mainContent.appendChild(flash);
-
-    diveBtn.onclick = () => {
-        sessionStorage.setItem('musicPlaying', musicPlaying ? 'true' : 'false');
-        sessionStorage.setItem('musicVolume', bgMusic.volume.toString());
-
-        const bgVideo = document.getElementById('bg-video');
-        if (bgVideo) {
-            bgVideo.play().then(() => {
-                setTimeout(() => {
-                    bgVideo.playbackRate = 15;
-                }, 200);
-            });
-        }
-
-        setTimeout(() => {
-            document.body.classList.add('zoom-blur');
-            if (bgVideo) bgVideo.classList.add('zoom-blur');
-            if (document.getElementById('main-content')) document.getElementById('main-content').classList.add('zoom-blur');
-            if (document.getElementById('main-body')) document.getElementById('main-body').classList.add('zoom-blur');
-
-            setTimeout(() => {
-                curtainLeft.classList.add('in');
-                curtainRight.classList.add('in');
-            }, 300);
-            setTimeout(() => {
-                flash.classList.add('in');
-            }, 600);
-            setTimeout(() => {
-                if (bgVideo) bgVideo.playbackRate = 1;
-                window.location.href = 'room.html';
-            }, 1000);
-        }, 200);
-    };
     
     </script>
 </body>
