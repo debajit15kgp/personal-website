@@ -225,7 +225,7 @@
             </svg>
         </button>
         
-        <!-- Projects Section -->
+        <!-- Projects Section --> 
         <main id="projects">
             <div class="loading">Loading projects...</div>
         </main>
@@ -363,12 +363,22 @@
                     const section = document.createElement('section');
                     section.id = project.id;
                     section.className = 'project-item';
-                    
+
+                    // Render description as bullet points if it's an array
+                    let descriptionHTML = '';
+                    if (Array.isArray(project.description)) {
+                        descriptionHTML = '<ul class="project-description">' +
+                            project.description.map(point => `<li>${point}</li>`).join('') +
+                            '</ul>';
+                    } else {
+                        descriptionHTML = `<p class="project-description">${project.description}</p>`;
+                    }
+
                     section.innerHTML = `
                         <h3>${project.title}</h3>
                         <p class="project-year">${project.year}</p>
                         <img src="${project.image}" alt="${project.title}">
-                        <p class="project-description">${project.description}</p>
+                        ${descriptionHTML}
                         <div class="tech-stack">
                             ${project.tech.map(tech => `<span class="tech-item">${tech}</span>`).join('')}
                         </div>

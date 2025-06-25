@@ -1,8 +1,12 @@
 {
-  "title": "Personal Website v3",
+  "title": "Research Assistant, IIT Kharagpur",
   "year": "2022",
-  "description": "The third iteration of my personal portfolio website, focusing on a clean aesthetic, WebGL animations, and a seamless user experience. Built with vanilla JavaScript and Three.js to keep it lightweight and fast.",
-  "image": "https://source.unsplash.com/random/1200x800?portfolio",
-  "github": "https://github.com/debajit/personal-website",
-  "tech": ["HTML5", "CSS3", "JavaScript", "Three.js"]
+  "description": [
+    "Achieved 20% improvement in identifying Wikipedia editors likely to leave, aiding early retention.",
+    "Extracted user information of Wikipedians for detailed analysis.",
+    "Performed sentiment analysis (65% accuracy) to gauge satisfaction levels."
+  ],
+  "image": "photos/wikipedia.png",
+  "github": "https://github.com/debajit15kgp/Missing-Active-Wikipedians",
+  "tech": ["Pytorch"]
 } 

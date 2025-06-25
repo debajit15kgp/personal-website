@@ -1,8 +1,12 @@
 {
-  "title": "E-commerce Platform",
-  "year": "2023",
-  "description": "A full-stack e-commerce solution built from the ground up. Features include product management, user authentication, a shopping cart, and Stripe integration for payments. The entire platform is containerized with Docker.",
-  "image": "https://source.unsplash.com/random/1200x800?commerce",
-  "github": "https://github.com/debajit/ecommerce",
-  "tech": ["Django", "PostgreSQL", "React", "Docker", "Stripe API"]
+  "title": "Compute vs Data Transfer: Memory Optimizations for Neural Networks ",
+  "year": "2021",
+  "description": [
+    "Developed a layer-adaptive memory optimization algorithm, saving 50% GPU memory or doubling execution speed.",
+    "Trained neural networks with lower GPU budget by optimizing extra forward computation and CPU-GPU transfer time.",
+    "Achieved 13% better execution time than CPU-only implementation; implemented VGGNet & ConvNet on our algorithm."
+  ],
+  "image": "photos/gpu.avif",
+  "github": "https://github.com/debajit15kgp/Layup-HP3",
+  "tech": ["cudNN", "CUDA", "C++"]
 } 

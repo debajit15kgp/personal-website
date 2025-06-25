@@ -1,8 +1,12 @@
 {
-  "title": "Generative Art System",
-  "year": "2024",
-  "description": "A web-based platform for creating and exploring generative art. Users can tweak parameters and algorithms to produce unique visual outputs, export high-resolution images, and share their creations with the community.",
-  "image": "https://source.unsplash.com/random/1200x800?abstract",
-  "github": "https://github.com/debajit/generative-art",
-  "tech": ["Three.js", "React", "Node.js", "GLSL"]
+  "title": "Bachelor Thesis Project, Efficient Multi-agent reinforcement learning",
+  "year": "2022",
+  "description": [
+    "Achieved 7-8% performance improvement by sampling and averaging multiple actions over baseline multi-agent algorithms.",
+    "Extended distributional RL to multi-agent settings for upscaling predator-prey environments.",
+    "Achieved 25% higher rewards in complex multi-agent scenarios."
+  ],
+  "image": "photos/mark.svg",
+  "github": "https://github.com/Multi-Agent-Research-Group",
+  "tech": ["Pytorch"]
 } 

@@ -719,7 +719,7 @@
 
         // Add name above the subtitle
         const nameDiv = document.createElement('div');
-        nameDiv.textContent = 'Debajit';
+        nameDiv.textContent = 'DEBAJIT';
         nameDiv.style.position = 'fixed';
         nameDiv.style.top = '50%';
         nameDiv.style.left = '50%';
@@ -738,7 +738,6 @@
         const subtitles = [
             "software engineer",
             "Reinforcement learning", 
-            "YNWA - Liverpool ❤️"
         ];
         const subtitleDiv = document.createElement('div');
         subtitleDiv.style.position = 'fixed';
@@ -1267,10 +1266,14 @@
                                 mainContent.style.filter = 'blur(0px) brightness(1)';
                             }
                             
-                            // Ensure Three.js container is visible
+                            // Ensure Three.js container is visible and recreated if needed
                             if (threeContainer) {
                                 threeContainer.style.display = 'block';
                                 threeContainer.style.opacity = '1';
+                            } else {
+                                // If Three.js container doesn't exist, recreate the main scene
+                                console.log('🔄 Three.js container not found, recreating main scene...');
+                                renderMainScene();
                             }
                             
                             if (mainCursor) {

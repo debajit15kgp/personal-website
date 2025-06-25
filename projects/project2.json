@@ -1,8 +1,12 @@
 {
-  "title": "Interactive Data Viz",
-  "year": "2023",
-  "description": "An interactive dashboard for visualizing complex climate change data. The project fetches real-time data from multiple APIs and presents it through a series of interactive charts, maps, and graphs built with D3.js.",
-  "image": "https://source.unsplash.com/random/1200x800?data",
-  "github": "https://github.com/debajit/data-viz",
-  "tech": ["D3.js", "Vue.js", "Python", "Flask"]
+  "title": "RoboCup Small Sized League (SSL)",
+  "year": "2021",
+  "description": [
+    "Built scalable cooperative multiagent systems for Robosoccer using FSMs and coordinated plays.",
+    "Implemented RRT/RRT* planning algorithms on real robots for warehouse management solutions.",
+    "Developed skills like passing, defense, and movement control using p-controller in ROS Turtlesim."
+  ],
+  "image": "photos/robocup.jpg",
+  "github": "https://github.com/KRSSG",
+  "tech": ["Python", "tensorflow", "C++"]
 } 
