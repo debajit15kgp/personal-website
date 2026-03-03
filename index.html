@@ -3,1515 +3,677 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debajit's Interactive 3D Website</title>
+    <title>Debajit Chakraborty</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Didot:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
+        :root {
+            --text-primary: #2d2d2d;
+            --text-secondary: #6b7280;
+            --bg-primary: #fefbf3;
+            --bg-secondary: #faf9f6;
+            --accent: #d97706;
+            --border: #e5e7eb;
+        }
+
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Didot', serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Left Sidebar - Recent Blogs */
+        .blog-sidebar {
+            width: 320px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 2rem;
+            position: fixed;
+            height: 100vh;
             overflow-y: auto;
-            overflow-x: hidden;
-            font-family: 'Didot', serif;
-            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
-            color: #ffffff;
-            min-height: 200vh;
+            box-shadow: 2px 0 16px rgba(0,0,0,0.05);
         }
 
-        #main-cursor {
-            position: fixed;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.8);
-            pointer-events: none;
-            z-index: 10001;
-            transform: translate(-50%, -50%);
-            mix-blend-mode: difference;
-            transition: width 0.3s ease, height 0.3s ease, opacity 0.5s ease;
-            filter: blur(1px);
-            box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+        .blog-sidebar h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
         }
 
-        #main-cursor.hover {
-            width: 24px;
-            height: 24px;
-            filter: blur(1.5px);
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-        }
-        
-        /* Main page container */
-        #main-page {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            background-color: transparent;
-        }
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1000;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.7s, transform 0.7s, filter 0.7s;
-            opacity: 1;
-            transform: scale(1);
-            filter: blur(0px);
-        }
-        #loading-overlay.fade-out {
-            opacity: 0;
-            transform: scale(1.05);
-            filter: blur(8px);
-            pointer-events: none;
-        }
-        #three-container {
-            opacity: 0;
-            transition: opacity 2.2s cubic-bezier(.77,0,.18,1);
-        }
-        #three-container.fade-in {
-            opacity: 1;
-        }
-        .loading-text {
-            position: absolute;
-            top: 20px;
-            font-size: 1.5em;
-            font-weight: 300;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-        .message-box {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(74, 85, 104, 0.9);
-            color: #cbd5e0;
-            padding: 15px 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1001;
-            display: none;
-            animation: fadeInOut 4s forwards;
-        }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-        /* Dive In Animation Enhancements */
-        .zoom-blur {
-            transform: scale(1.18);
-            filter: blur(10px) brightness(0.5);
-            transition: transform 1.2s cubic-bezier(.77,0,.18,1), filter 1.2s cubic-bezier(.77,0,.18,1);
-        }
-        .curtain {
-            position: fixed;
-            top: 0;
-            width: 50vw;
-            height: 100vh;
-            background: linear-gradient(90deg, #181818 80%, #232323 100%);
-            z-index: 2000;
-            transition: transform 1.1s cubic-bezier(.77,0,.18,1);
-        }
-        .curtain.left {
-            left: 0;
-            transform: translateX(-100%);
-        }
-        .curtain.right {
-            right: 0;
-            background: linear-gradient(270deg, #181818 80%, #232323 100%);
-            transform: translateX(100%);
-        }
-        .curtain.in.left {
-            transform: translateX(0);
-        }
-        .curtain.in.right {
-            transform: translateX(0);
-        }
-        .flash {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at 50% 50%, #fff 0%, #fff8 40%, #0000 80%);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 3000;
-            transition: opacity 0.35s cubic-bezier(.77,0,.18,1);
-        }
-        .flash.in {
-            opacity: 1;
-        }
-        
-        /* Room Section Styles */
-        #room-section {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            margin-top: 100vh;
-            background: transparent; /* Remove gradient background to show video */
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(100px) scale(0.95);
-            transition: opacity 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            z-index: 5;
-        }
-        
-        #room-section.visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        
-        #room-container { background: transparent; /* Ensure container is transparent */ 
+        .blog-list {
             width: 100%;
-            height: 100%;
-            position: relative;
-            background: transparent; /* Ensure container is transparent */
-        }
-        
-        /* Enhanced main content transitions */
-        #main-content {
-            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        pointer-events 0.3s ease;
-        }
-        
-        #main-body {
-            transition: filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        /* Enhanced scroll indicator transitions */
-        .scroll-indicator {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #ffffff;
-            text-align: center;
-            z-index: 50;
-            opacity: 0.8;
-            transition: opacity 0.8s, transform 0.8s;
-            padding-top: 80px;
-            width: 380px;
-            background: none;
-            border: none;
         }
 
-        .scroll-indicator::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 260px;
-            height: 130px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-bottom: none;
-            border-radius: 130px 130px 0 0;
+        .blog-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        
-        .scroll-indicator.hidden {
-            opacity: 0;
-            transform: translateX(-50%) translateY(20px);
+
+        .blog-table thead {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
         }
-        
-        /* Remove unused styles */
-        @keyframes bounce { }
-        .scroll-arrow { display: none; }
-        
-        /* Smooth button transitions */
-        button {
-            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        pointer-events 0.3s ease, 
-                        transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        box-shadow 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        background 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+        .blog-table th {
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            border-right: 1px solid var(--border);
         }
-        
-        /* Enhanced music control transitions */
-        #music-control {
-            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        pointer-events 0.3s ease,
-                        background 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+        .blog-table th:last-child {
+            border-right: none;
         }
-        
-        /* Smooth text transitions */
-        div[style*="color: #000000"] {
-            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                        pointer-events 0.3s ease;
+
+        .blog-table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'Helvetica Neue', sans-serif;
         }
-        
-        #music-control {
-            transition: opacity 0.8s ease-out, pointer-events 0.8s ease-out;
+
+        .blog-table td:last-child {
+            border-right: none;
         }
-        
-        /* Room-specific styles */
-        #custom-cursor {
-            position: fixed;
-            width: 150px;
-            height: 150px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10000;
-            transform: translate(-50%, -50%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-        
-        #cursor-text {
-            color: rgba(255, 255, 255, 0.8);
-            font-family: 'Didot', serif;
-            font-weight: bold;
-            font-size: 16px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-        
-        #transition-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,1) 100%);
-            z-index: 100000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease-in-out;
-        }
-        
-        #transition-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-        
-        .curtain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: transparent; /* Remove gradient background to show video */
-            z-index: 99999;
-            transform: translateY(-100%);
-            transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .curtain.active {
-            transform: translateY(0);
-        }
-        
-        #back-btn {
-            position: fixed;
-            top: 32px;
-            left: 36px;
-            width: 54px;
-            height: 54px;
-            background: rgba(0,0,0,0.18);
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
+
+        .blog-table tbody tr {
+            transition: background 0.15s;
             cursor: pointer;
-            transition: background 0.2s;
         }
-        
-        #back-btn:hover {
-            background: rgba(255,224,102,0.12);
+
+        .blog-table tbody tr:hover {
+            background: var(--bg-secondary);
         }
-        
-        #three-room { background: transparent; /* Ensure container is transparent */ 
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
-            background: transparent; /* Ensure container is transparent */
-        }
-        
-        #three-room canvas {
-            background: transparent !important; /* Force canvas background to be transparent */
-        }
-        
-        #bg-video {
-            z-index: 0 !important; /* Ensure video is behind everything */
-            opacity: 1 !important; /* Force video to be visible */
-        }
-        
-        #room-section {
-            z-index: 1 !important; /* Ensure room section is above video */
-            background: transparent !important; /* Force room section to be transparent */
-        }
-        
-        #three-room {
-            z-index: 1 !important; /* Ensure Three.js is above video */
-            background: transparent !important; /* Force Three.js container to be transparent */
-        }
-        
-        /* Ensure room overlay doesn't block video */
-        .room-overlay {
-            z-index: -1 !important; /* Keep overlay behind everything */
-            opacity: 0 !important; /* Force overlay to be invisible */
-        }
-        
-        /* Social Media Links Hover Effects */
-        #social-links a:hover {
-            background: rgba(255, 224, 102, 0.2) !important;
-            border-color: rgba(255, 224, 102, 0.6) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 224, 102, 0.2);
-        }
-        
-        .scroll-indicator {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fcfbf6;
-            font-size: 1.2em;
+
+        .blog-title {
             font-weight: 500;
-            text-align: center;
-            z-index: 50;
-            opacity: 0.8;
-            transition: opacity 0.3s;
+            color: var(--text-primary);
+            font-family: 'Didot', serif;
         }
-        
-        .scroll-indicator.hidden {
-            opacity: 0;
+
+        .blog-date {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
         }
-        
-        .scroll-arrow {
-            display: block;
-            font-size: 2em;
-            margin-top: 10px;
-            animation: bounce 2s infinite;
+
+        /* Social Media Links */
+        .social-links {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+
+        .social-links h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
         }
-        .scroll-indicator span {
-            font-size: 12px !important; /* Use pixels and !important for specificity */
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s;
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .social-link:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            background-color: var(--bg-secondary);
+        }
+
+        .social-link svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 320px;
+            padding: 3rem 4rem;
+            max-width: 1200px;
+        }
+
+        .header {
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
             font-weight: 300;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .header .subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .header .intro {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 400;
+            margin-top: 1rem;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+            color: var(--text-primary);
+        }
+
+        /* Experience Sections */
+        .experience-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .experience-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .experience-table thead {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .experience-table th {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .experience-table th:last-child {
+            border-right: none;
+        }
+
+        .experience-table td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+
+        .experience-table td:last-child {
+            border-right: none;
+        }
+
+        .experience-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .experience-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .experience-year {
+            font-size: 0.95rem;
+            color: var(--accent);
+            font-weight: 400;
+            font-family: 'Didot', serif;
+        }
+
+        .experience-description {
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .experience-section-header {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            font-family: 'Didot', serif;
+        }
+
+        .experience-section-header td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Life Section */
+        .life-section {
+            margin-top: 3rem;
+        }
+
+        .life-section h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .life-content {
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 1rem;
+        }
+
+        /* Blog Section in Main Content */
+        .blog-section {
+            margin-top: 3rem;
+        }
+
+        .blog-section h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        #main-blogs-list {
+            width: 100%;
+        }
+
+        .main-blog-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .main-blog-table thead {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .main-blog-table th {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .main-blog-table th:last-child {
+            border-right: none;
+        }
+
+        .main-blog-table td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+
+        .main-blog-table td:last-child {
+            border-right: none;
+        }
+
+        .main-blog-table tbody tr {
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .main-blog-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .blog-sidebar {
+                width: 280px;
+            }
+
+            .main-content {
+                margin-left: 280px;
+                padding: 2rem 2rem;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .blog-sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                max-height: 300px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 2rem 1.5rem;
+            }
+
+            .experience-table {
+                font-size: 0.75rem;
+            }
+
+            .experience-table th,
+            .experience-table td {
+                padding: 0.6rem 0.8rem;
+            }
         }
     </style>
 </head>
-<body id="main-body" style="background: transparent; margin: 0; min-height: 100vh;">
-    <div id="main-cursor"></div>
-    <video id="bg-video" autoplay loop muted playsinline
-      style="position: fixed; top: 0; left: 0; min-width: 100vw; min-height: 100vh; object-fit: cover; z-index: 0;">
-      <source src="assets/bgvideo.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    
-    <!-- Loading Overlay (moved outside main-content) -->
-    <div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.7s;">
-        <div id="cat-gif-row" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-end; gap: 32px; margin-bottom: 36px;">
-            <img src="cat.gif" alt="Cat 1" style="max-width: 200px; max-height: 200px; border-radius: 16px;" />
-            <img src="cat1.gif" alt="Cat 2" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
-            <img src="cat2.gif" alt="Cat 3" style="max-width: 140px; max-height: 140px; border-radius: 16px;" />
-        </div>
-        <div id="loading-percent" style="font-family: 'Didot', serif; font-size: 4.2em; color: #ffe066; font-weight: 700; letter-spacing: 0.08em; margin-top: 10px; text-shadow: 0 2px 16px #000a;">1%</div>
-    </div>
-    
-    <!-- Main Content Container -->
-    <div id="main-content" style="position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;">
-        <!-- Music Control Button -->
-        <button id="music-control" style="position: fixed; top: 32px; left: 36px; width: 48px; height: 48px; background: rgba(0,0,0,0.18); border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 25; cursor: pointer; transition: background 0.2s;">
-            <svg id="music-icon" width="24" height="24" viewBox="0 0 24 24" style="stroke: #ffe066; stroke-width: 2; fill: none;">
-                <path d="M9 18V5l12-2v13"/>
-                <circle cx="6" cy="18" r="3"/>
-                <circle cx="18" cy="16" r="3"/>
-            </svg>
-        </button>
-        <!-- Scroll Indicator -->
-        <div class="scroll-indicator">
-            <span>SCROLL DOWN</span>
-        </div>
-    </div>
-    
-    <!-- Room Section -->
-    <div id="room-section">
-        <div id="room-container">
-            <!-- Room content will be loaded here dynamically -->
-        </div>
-        <div class="room-overlay"></div>
-    </div>
-    
-    <!-- Background Music -->
-    <audio id="bg-music" loop>
-        <source src="music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-    <script>
-    // --- MAIN PAGE CUSTOM CURSOR ---
-    const mainCursor = document.getElementById('main-cursor');
-    if (mainCursor) {
-        let mouseX = 0, mouseY = 0;
-        let cursorX = 0, cursorY = 0;
-        const speed = 0.1;
-
-        window.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateMainCursor() {
-            cursorX += (mouseX - cursorX) * speed;
-            cursorY += (mouseY - cursorY) * speed;
-            mainCursor.style.left = cursorX + 'px';
-            mainCursor.style.top = cursorY + 'px';
-            requestAnimationFrame(animateMainCursor);
-        }
-        animateMainCursor();
-
-        // Add hover effect for links and buttons
-        document.querySelectorAll('a, button').forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                // Only show hover effect when main content is visible
-                if (!isRoomVisible) mainCursor.classList.add('hover');
-            });
-            el.addEventListener('mouseleave', () => {
-                mainCursor.classList.remove('hover');
-            });
-        });
-    }
-
-    // --- SCROLL-BASED TRANSITION VARIABLES ---
-    let roomScene = null;
-    let isRoomVisible = false;
-    
-    // Animate the loading percent
-    function animatePercent(duration = 2200) {
-        const percentEl = document.getElementById('loading-percent');
-        if (!percentEl) return;
-        let start = null;
-        function step(ts) {
-            if (!start) start = ts;
-            const elapsed = ts - start;
-            let percent = Math.min(100, Math.floor((elapsed / duration) * 100) + 1);
-            percentEl.textContent = percent + '%';
-            if (percent < 100) {
-                requestAnimationFrame(step);
-            } else {
-                percentEl.textContent = '100%';
-            }
-        }
-        requestAnimationFrame(step);
-    }
-    animatePercent();
-
-    // --- Standardized Music Control ---
-    const bgMusic = document.getElementById('bg-music');
-    const musicControl = document.getElementById('music-control');
-    const musicIcon = document.getElementById('music-icon');
-    let musicPlaying = false;
-
-    function startMusic() {
-        const savedVolume = sessionStorage.getItem('musicVolume');
-        if (savedVolume) {
-            bgMusic.volume = parseFloat(savedVolume);
-        } else {
-            bgMusic.volume = 0.7; // Default volume
-        }
-        
-        const wasPlaying = sessionStorage.getItem('musicPlaying') === 'true';
-        // Play if returning from a page where music was on, or if it's the very first visit
-        if (wasPlaying || sessionStorage.getItem('musicPlaying') === null) {
-            bgMusic.play().then(() => {
-                musicPlaying = true;
-                sessionStorage.setItem('musicPlaying', 'true');
-                updateMusicIcon();
-            }).catch(error => {
-                console.log('Music autoplay blocked:', error);
-                musicPlaying = false;
-                sessionStorage.setItem('musicPlaying', 'false'); // Set state to off if autoplay fails
-                updateMusicIcon();
-            });
-        } else {
-            musicPlaying = false;
-            updateMusicIcon();
-        }
-    }
-
-    function toggleMusic() {
-        if (musicPlaying) {
-            bgMusic.pause();
-            musicPlaying = false;
-            sessionStorage.setItem('musicPlaying', 'false');
-        } else {
-            bgMusic.play();
-            musicPlaying = true;
-            sessionStorage.setItem('musicPlaying', 'true');
-        }
-        updateMusicIcon();
-    }
-
-    function updateMusicIcon() {
-        if (musicPlaying) {
-            musicIcon.innerHTML = `
-                <path d=\"M9 18V5l12-2v13\"/>
-                <circle cx=\"6\" cy=\"18\" r=\"3\"/>
-                <circle cx=\"18\" cy=\"16\" r=\"3\"/>
-            `;
-        } else {
-            musicIcon.innerHTML = `
-                <path d=\"M9 18V5l12-2v13\"/>
-                <circle cx=\"6\" cy=\"18\" r=\"3\"/>
-                <circle cx=\"18\" cy=\"16\" r=\"3\"/>
-                <line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\" stroke=\"#ffe066\" stroke-width=\"2\"/>
-            `;
-        }
-    }
-    
-    musicControl.addEventListener('click', toggleMusic);
-    musicControl.addEventListener('mouseenter', () => { musicControl.style.background = 'rgba(255,224,102,0.12)'; });
-    musicControl.addEventListener('mouseleave', () => { musicControl.style.background = 'rgba(0,0,0,0.18)'; });
-
-    // Initialize music state on page load
-    startMusic();
-
-    // Only show loading if not returning from room.html
-    let skipLoading = false;
-    if (window.sessionStorage.getItem('fromRoom') === '1') {
-        skipLoading = true;
-        window.sessionStorage.removeItem('fromRoom');
-    }
-
-    // Check if we should show room scene (coming back from other pages)
-    let showRoomScene = false;
-    if (window.sessionStorage.getItem('showRoomScene') === 'true') {
-        showRoomScene = true;
-        window.sessionStorage.removeItem('showRoomScene');
-    }
-
-    // Check if we're returning from another page and should show room scene
-    if (window.sessionStorage.getItem('fromOtherPage') === 'true') {
-        showRoomScene = true;
-        window.sessionStorage.removeItem('fromOtherPage');
-    }
-
-    // --- IMMEDIATE ROOM SCENE IF FLAG IS SET ---
-    if (showRoomScene) {
-        document.addEventListener('DOMContentLoaded', () => {
-            // First, load the main scene content (spheres, name, subtitle)
-            renderMainScene();
-            
-            if (mainCursor) mainCursor.style.display = 'none';
-            // Hide main content and loading overlay
-            const mainContent = document.getElementById('main-content');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const roomSection = document.getElementById('room-section');
-            
-            // Ensure main content is loaded but hidden
-            if (mainContent) {
-                mainContent.style.display = 'flex';
-                mainContent.style.opacity = '0';
-                mainContent.style.pointerEvents = 'none';
-                mainContent.style.transform = 'scale(1.08) translateY(-20px)';
-                mainContent.style.filter = 'blur(12px) brightness(0.7)';
-            }
-            
-            if (loadingOverlay) loadingOverlay.style.display = 'none';
-            if (roomSection) {
-                roomSection.classList.add('visible');
-                roomSection.style.opacity = '1';
-                roomSection.style.transform = 'translateY(0) scale(1)';
-            }
-            
-            // Set room as visible
-            isRoomVisible = true;
-            
-            // Initialize the embedded room scene immediately
-            setTimeout(() => { 
-                initRoomScene(); 
-                // Set scroll position to show room scene after initialization
-                setTimeout(() => {
-                    window.scrollTo(0, window.innerHeight);
-                }, 200);
-            }, 10);
-        });
-    } else {
-        // Call showMainScene or loading logic
-        if (skipLoading) {
-            console.log('⏭️ Skipping loading, calling fadeOutAndRemoveLoadingOverlay and renderMainScene');
-            fadeOutAndRemoveLoadingOverlay();
-            renderMainScene();
-        } else {
-            console.log('⏳ Loading enabled, will call renderMainScene in 1.2s');
-            setTimeout(() => {
-                console.log('⏰ Timeout finished, calling renderMainScene');
-                renderMainScene();
-            }, 1200);
-        }
-    }
-
-    function fadeOutAndRemoveLoadingOverlay() {
-        console.log('🔄 fadeOutAndRemoveLoadingOverlay called');
-        const overlay = document.getElementById('loading-overlay');
-        const three = document.getElementById('three-container');
-        
-        if (overlay) {
-            console.log('🎭 Fading out loading overlay');
-            overlay.classList.add('fade-out');
-            
-            if (three) {
-                three.style.display = 'block';
-                setTimeout(() => three.classList.add('fade-in'), 40);
-            }
-            
-            // Force remove the overlay after transition
-            setTimeout(() => {
-                console.log('🗑️ Removing loading overlay');
-                overlay.remove();
-            }, 800);
-        } else {
-            console.log('⚠️ No loading overlay found');
-            if (three) {
-                three.style.display = 'block';
-                setTimeout(() => three.classList.add('fade-in'), 40);
-            }
-        }
-    }
-
-    function renderMainScene() {
-        console.log('🎬 renderMainScene called');
-        
-        // Create container for Three.js
-        const container = document.createElement('div');
-        container.id = 'three-container';
-        container.style.position = 'fixed';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.width = '100vw';
-        container.style.height = '100vh';
-        container.style.zIndex = '2';
-
-        // Add name above the subtitle
-        const nameDiv = document.createElement('div');
-        nameDiv.textContent = 'DEBAJIT';
-        nameDiv.style.position = 'fixed';
-        nameDiv.style.top = '50%';
-        nameDiv.style.left = '50%';
-        nameDiv.style.transform = 'translate(-50%, -50%)';
-        nameDiv.style.color = '#ffe066';
-        nameDiv.style.fontSize = '3.2em';
-        nameDiv.style.fontWeight = '900';
-        nameDiv.style.letterSpacing = '0.04em';
-        nameDiv.style.textShadow = '0 2px 32px #000a, 0 0 20px #ffe06688';
-        nameDiv.style.zIndex = '11';
-        nameDiv.style.fontFamily = 'Didot, serif';
-        nameDiv.style.pointerEvents = 'none';
-        nameDiv.style.userSelect = 'none';
-        
-        // Add subtitle cycling text below the name
-        const subtitles = [
-            "software engineer",
-            "Reinforcement learning", 
-        ];
-        const subtitleDiv = document.createElement('div');
-        subtitleDiv.style.position = 'fixed';
-        subtitleDiv.style.top = 'calc(50% + 3.2em)';
-        subtitleDiv.style.left = '50%';
-        subtitleDiv.style.transform = 'translate(-50%, 0)';
-        subtitleDiv.style.color = '#000000';
-        subtitleDiv.style.fontSize = '1.6em';
-        subtitleDiv.style.fontWeight = '700';
-        subtitleDiv.style.letterSpacing = '0.04em';
-        subtitleDiv.style.textShadow = '0 2px 12px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 255, 255, 0.6)';
-        subtitleDiv.style.zIndex = '10';
-        subtitleDiv.style.fontFamily = 'Didot, serif';
-        subtitleDiv.style.pointerEvents = 'none';
-        subtitleDiv.style.opacity = '0';
-        subtitleDiv.style.transition = 'opacity 1.7s';
-        
-        // Add both to main-content container
-        const mainContent = document.getElementById('main-content');
-        console.log('📦 Main content found:', !!mainContent);
-        
-        mainContent.appendChild(container);
-        mainContent.appendChild(nameDiv);
-        mainContent.appendChild(subtitleDiv);
-        
-        console.log('✅ Elements added to main-content');
-
-        // Three.js setup
-        const scene = new THREE.Scene();
-        scene.background = null; // Make background transparent to show video
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0, 10);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(renderer.domElement);
-
-        // Spheres random cluster (no overlap)
-        const spheres = [];
-        const sphereCount = 35;
-        const minGap = 0.08; // minimum gap between spheres
-        for (let i = 0; i < sphereCount; i++) {
-            let tries = 0;
-            let pos, s;
-            let valid = false;
-            while (!valid && tries < 120) {
-                // Random position in a slightly smaller sphere
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                const r = 1.7 + Math.random() * 2;
-                const x = Math.sin(phi) * Math.cos(theta) * r;
-                const y = Math.sin(phi) * Math.sin(theta) * r * 0.9;
-                const z = Math.cos(phi) * r * 0.7;
-                s = 0.38 + Math.random() * 0.55;
-                pos = new THREE.Vector3(x, y, z);
-                valid = true;
-                for (let j = 0; j < spheres.length; j++) {
-                    const other = spheres[j];
-                    const minDist = (other.geometry.parameters.radius + s) + minGap;
-                    if (
-                        pos.distanceTo(other.position) < minDist ||
-                        Math.abs(pos.x - other.position.x) < minDist ||
-                        Math.abs(pos.y - other.position.y) < minDist ||
-                        Math.abs(pos.z - other.position.z) < minDist
-                    ) {
-                        valid = false;
-                        break;
-                    }
-                }
-                tries++;
-            }
-            const geometry = new THREE.SphereGeometry(s, 48, 48);
-            const material = new THREE.MeshPhysicalMaterial({
-                color: 0xf8f6ff,
-                metalness: 0.45,
-                roughness: 0.18,
-                reflectivity: 0.7,
-                clearcoat: 0.18,
-                clearcoatRoughness: 0.18,
-                transmission: 0.22,
-                ior: 1.6,
-                envMapIntensity: 1.1,
-                sheen: 1.0,
-                sheenColor: new THREE.Color(0xc7e0ff),
-                sheenRoughness: 0.18,
-                iridescence: 0.45,
-                iridescenceIOR: 1.3,
-                iridescenceThicknessRange: [120, 340],
-            });
-            const sphere = new THREE.Mesh(geometry, material);
-            sphere.position.copy(pos);
-            sphere.userData.home = sphere.position.clone();
-            scene.add(sphere);
-            spheres.push(sphere);
-        }
-
-        // Lighting
-        const ambient = new THREE.AmbientLight(0xffffff, 0.38);
-        scene.add(ambient);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(3, 6, 8);
-        scene.add(dirLight);
-        const pointLight = new THREE.PointLight(0xffffff, 1.2, 100);
-        pointLight.position.set(-4, 4, 8);
-        scene.add(pointLight);
-
-        // Mouse interaction
-        let mouse = new THREE.Vector2(0, 0);
-        let mouseWorld = new THREE.Vector3(0, 0, 0);
-        let raycaster = new THREE.Raycaster();
-        window.addEventListener('mousemove', (event) => {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const t = -raycaster.ray.origin.z / raycaster.ray.direction.z;
-            mouseWorld = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(t));
-        });
-
-        // Animate spheres with repulsion
-        function animateSpheres() {
-            requestAnimationFrame(animateSpheres);
-            spheres.forEach((sphere, i) => {
-                const dist = sphere.position.distanceTo(mouseWorld);
-                const home = sphere.userData.home;
-                let repulse = new THREE.Vector3();
-                if (dist < 2.2) {
-                    const strength = 1.5 * Math.pow(2.2 - dist, 1.25);
-                    repulse.copy(sphere.position).sub(mouseWorld).normalize().multiplyScalar(strength);
-                }
-                const toHome = home.clone().sub(sphere.position).multiplyScalar(0.11);
-                sphere.position.add(toHome).add(repulse.multiplyScalar(0.32));
-                sphere.rotation.y += 0.01 + i * 0.002;
-            });
-
-            for (let i = 0; i < spheres.length; i++) {
-                for (let j = i + 1; j < spheres.length; j++) {
-                    const a = spheres[i];
-                    const b = spheres[j];
-                    const ra = a.geometry.parameters.radius;
-                    const rb = b.geometry.parameters.radius;
-                    const minDist = ra + rb + minGap;
-                    const delta = b.position.clone().sub(a.position);
-                    const d = delta.length();
-                    if (d < minDist && d > 0.0001) {
-                        const overlap = (minDist - d) / 2;
-                        const push = delta.normalize().multiplyScalar(overlap + 0.001);
-                        b.position.add(push);
-                        a.position.add(push.clone().multiplyScalar(-1));
-                    }
-                }
-            }
-            renderer.render(scene, camera);
-        }
-        animateSpheres();
-
-        // Responsive
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Subtitle cycling logic
-        let subtitleIdx = 0;
-        function cycleSubtitle() {
-            subtitleDiv.textContent = subtitles[subtitleIdx];
-            subtitleDiv.style.opacity = '1';
-            setTimeout(() => {
-                subtitleDiv.style.opacity = '0';
-                setTimeout(() => {
-                    subtitleIdx = (subtitleIdx + 1) % subtitles.length;
-                    cycleSubtitle();
-                }, 600); // fade out duration
-            }, 1800); // visible duration
-        }
-        setTimeout(cycleSubtitle, 600); // initial delay
-
-        fadeOutAndRemoveLoadingOverlay();
-    }
-
-    // --- SCROLL-BASED TRANSITION ---
-    
-    // Initialize room scene (simplified - no dynamic loading)
-    function initRoomScene() {
-        if (roomScene && roomScene.loaded) {
-            console.log('🚫 Room scene already loaded or container not found');
-            return;
-        }
-        
-        console.log('🎬 Initializing embedded room scene...');
-        
-        // Get the room container
-        const roomContainer = document.getElementById('room-container');
-        if (!roomContainer) {
-            console.log('❌ Room container not found');
-            return;
-        }
-        
-        // Clear any existing content
-        roomContainer.innerHTML = '';
-        
-        // Create the room content directly
-        const roomContent = document.createElement('div');
-        roomContent.innerHTML = `
-            <div id="custom-cursor">
-                <span id="cursor-text">&lt; DRAG &gt;</span>
+<body>
+    <div class="container">
+        <!-- Left Sidebar - Recent Blogs -->
+        <aside class="blog-sidebar">
+            <h2>Recent Blogs</h2>
+            <div class="blog-list" id="blog-list">
+                <!-- Blogs will be loaded here -->
             </div>
-            
-            <!-- Transition Effects -->
-            <div id="transition-overlay"></div>
-            <div class="curtain"></div>
-            
-            <button id="back-btn" aria-label="Back to main">
-                <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: #ffe066; stroke-width: 2.5; fill: none;">
-                    <path d="M15 5l-7 7 7 7"/>
-                </svg>
-            </button>
-            
-            <div id="three-room"></div>
             
             <!-- Social Media Links -->
-            <div id="social-links" style="position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 25; display: flex; gap: 1.5rem; align-items: center;">
-                <a href="https://twitter.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Didot', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
-                    Twitter
+            <div class="social-links">
+                <h3>Connect</h3>
+                <a href="https://twitter.com/yourusername" target="_blank" class="social-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                    </svg>
+                    <span>Twitter</span>
                 </a>
-                <a href="https://instagram.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Didot', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
-                    Instagram
+                <a href="https://instagram.com/yourusername" target="_blank" class="social-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    <span>Instagram</span>
                 </a>
-                <a href="https://github.com/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Didot', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
-                    GitHub
+                <a href="https://github.com/yourusername" target="_blank" class="social-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    <span>GitHub</span>
                 </a>
-                <a href="https://linkedin.com/in/yourusername" target="_blank" style="color: #ffe066; text-decoration: none; font-family: 'Didot', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
-                    LinkedIn
+                <a href="https://linkedin.com/in/yourusername" target="_blank" class="social-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                        <rect x="2" y="9" width="4" height="12"></rect>
+                        <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                    <span>LinkedIn</span>
                 </a>
-                <a href="mailto:your.email@example.com" style="color: #ffe066; text-decoration: none; font-family: 'Didot', serif; font-size: 0.9rem; padding: 0.5rem 1rem; border: 1px solid rgba(255, 224, 102, 0.3); border-radius: 20px; transition: all 0.2s; background: rgba(0,0,0,0.1);">
-                    Email
+                <a href="mailto:your.email@example.com" class="social-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <span>Email</span>
                 </a>
             </div>
-        `;
-        
-        roomContent.style.width = '100%';
-        roomContent.style.height = '100%';
-        roomContent.style.position = 'absolute';
-        roomContent.style.top = '0';
-        roomContent.style.left = '0';
-        roomContent.style.zIndex = '15';
-        
-        roomContainer.appendChild(roomContent);
-        console.log('📦 Room content added to container');
-        
-        // Initialize Three.js scene
-        initThreeJSScene();
-        
-        // Set up back button functionality
-        const backBtn = roomContent.querySelector('#back-btn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                console.log('🔙 Back button clicked');
-                // Simple transition back to main content
-                const roomSection = document.getElementById('room-section');
-                const mainContent = document.getElementById('main-content');
-                
-                if (roomSection) roomSection.classList.remove('visible');
-                if (mainContent) {
-                    mainContent.style.opacity = '1';
-                    mainContent.style.pointerEvents = 'auto';
-                    mainContent.style.transform = 'scale(1)';
-                    mainContent.style.filter = 'blur(0px)';
-                }
-                
-                isRoomVisible = false;
-                window.scrollTo(0, 0);
-            });
-        }
-        
-        roomScene = { loaded: true };
-        console.log('✅ Room scene initialized');
-    }
-    
-    // Initialize Three.js scene for the room
-    function initThreeJSScene() {
-        const container = document.getElementById('three-room');
-        if (!container) {
-            console.log('❌ Three.js container not found');
-            return;
-        }
-        
-        console.log('🎨 Initializing Three.js scene...');
-        
-        // Debug: Check if video is playing and visible
-        const bgVideo = document.getElementById('bg-video');
-        if (bgVideo) {
-            console.log('🎥 Video element found:', {
-                paused: bgVideo.paused,
-                currentTime: bgVideo.currentTime,
-                readyState: bgVideo.readyState,
-                style: {
-                    zIndex: bgVideo.style.zIndex,
-                    opacity: bgVideo.style.opacity,
-                    display: bgVideo.style.display
-                }
-            });
-            
-            // Ensure video is playing
-            if (bgVideo.paused) {
-                bgVideo.play().then(() => {
-                    console.log('✅ Video started playing');
-                }).catch(err => {
-                    console.log('❌ Failed to play video:', err);
-                });
-            }
-        } else {
-            console.log('❌ Video element not found');
-        }
-        
-        const scene = new THREE.Scene();
-        scene.background = null; // Make background transparent to show video
-        console.log('🎨 Scene background set to null (transparent)');
-        
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 2, 14);
-        camera.fov = 50;
-        camera.updateProjectionMatrix();
-        
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setClearColor(0x000000, 0); // Set clear color to transparent
-        console.log('🎨 Renderer set with alpha: true and clear color transparent');
-        container.appendChild(renderer.domElement);
-        
-        // Basic lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-        
-        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
-        mainLight.position.set(0, 10, 10);
-        scene.add(mainLight);
-        
-        // Create movie screens
-        const screens = [];
-        const numScreens = 5;
-        const screenWidth = 13;
-        const spacing = 2;
-        
-        // Screen content configuration with image paths
-        const screenConfigs = [
-            { name: 'BLOG', type: 'blog', image: 'blog.jpg' },
-            { name: 'HOME', type: 'home', image: 'home.jpg' },
-            { name: 'CV', type: 'cv', image: 'resume.jpg' },
-            { name: 'ABOUT ME', type: 'about', image: 'contact.jpg' },
-            { name: 'PROJECTS', type: 'projects', image: 'project.jpeg' }
-        ];
-        
-        const textureLoader = new THREE.TextureLoader();
-        
-        // Function to create a canvas-based alpha map for the rounded corners
-        function createAlphaMap(width, height, radius) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const resolution = 256;
-            canvas.width = resolution;
-            canvas.height = resolution;
-            
-            const w = canvas.width;
-            const h = canvas.height;
-            const r = radius * (resolution / Math.max(width, height));
-            
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, w, h);
-            
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.moveTo(r, 0);
-            ctx.lineTo(w - r, 0);
-            ctx.quadraticCurveTo(w, 0, w, r);
-            ctx.lineTo(w, h - r);
-            ctx.quadraticCurveTo(w, h, w - r, h);
-            ctx.lineTo(r, h);
-            ctx.quadraticCurveTo(0, h, 0, h - r);
-            ctx.lineTo(0, r);
-            ctx.quadraticCurveTo(0, 0, r, 0);
-            ctx.closePath();
-            ctx.fill();
-            
-            return new THREE.CanvasTexture(canvas);
-        }
-        
-        // Function to create a text texture
-        function createTextTexture(text) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const resolution = 256;
-            canvas.width = resolution * 2;
-            canvas.height = resolution / 2;
-            
-            ctx.font = `bold ${resolution / 6}px 'Times New Roman', serif`;
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-            
-            return new THREE.CanvasTexture(canvas);
-        }
-        
-        for (let i = 0; i < numScreens; i++) {
-            const screenGroup = new THREE.Group();
-            
-            // Define the dimensions of our panel
-            const displayWidth = screenWidth * 1.5;
-            const displayHeight = screenWidth * 1.3;
-            
-            // Use a simple PlaneGeometry for clean texture mapping
-            const displayGeo = new THREE.PlaneGeometry(displayWidth, displayHeight);
-            
-            // Load the main image texture and apply the "cover" transformation
-            const texture = textureLoader.load(screenConfigs[i].image, (tex) => {
-                const imageAspect = tex.image.width / tex.image.height;
-                const displayAspect = displayWidth / displayHeight;
-                
-                tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-                
-                if (imageAspect > displayAspect) {
-                    tex.repeat.x = displayAspect / imageAspect;
-                    tex.repeat.y = 1;
-                    tex.offset.x = (1 - tex.repeat.x) / 2;
-                    tex.offset.y = 0;
-                } else {
-                    tex.repeat.x = 1;
-                    tex.repeat.y = imageAspect / displayAspect;
-                    tex.offset.x = 0;
-                    tex.offset.y = (1 - tex.repeat.y) / 2;
-                }
-            });
-            
-            // Create the material with the image and the alpha map for rounded corners
-            const displayMat = new THREE.MeshStandardMaterial({
-                map: texture,
-                alphaMap: createAlphaMap(displayWidth, displayHeight, 0.3),
-                transparent: true,
-                roughness: 0.6,
-                metalness: 0.1,
-                side: THREE.DoubleSide
-            });
-            
-            const display = new THREE.Mesh(displayGeo, displayMat);
-            screenGroup.add(display);
-            
-            // Add a text label
-            const textTexture = createTextTexture(screenConfigs[i].name);
-            const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
-            const textPlaneHeight = displayHeight * 0.15;
-            const textGeo = new THREE.PlaneGeometry(displayWidth * 0.5, textPlaneHeight);
-            const textPlane = new THREE.Mesh(textGeo, textMat);
-            textPlane.position.y = -(displayHeight / 2) - (textPlaneHeight / 2) - 0.2;
-            textPlane.position.z = 0.01;
-            screenGroup.add(textPlane);
-            
-            // Set initial position
-            const xPos = (i - (numScreens - 1) / 2) * spacing;
-            screenGroup.position.set(xPos, 1.5, 0);
-            screenGroup.userData.type = screenConfigs[i].type;
-            screenGroup.userData.initialX = xPos;
-            screenGroup.userData.index = i;
-            scene.add(screenGroup);
-            screens.push(screenGroup);
-        }
-        
-        // Add some fill lights to ensure visibility
-        const fillLight1 = new THREE.PointLight(0xffffff, 0.3, 50);
-        fillLight1.position.set(-5, 5, 8);
-        scene.add(fillLight1);
-        
-        const fillLight2 = new THREE.PointLight(0xffffff, 0.3, 50);
-        fillLight2.position.set(5, 5, 8);
-        scene.add(fillLight2);
-        
-        // Click interaction
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        
-        renderer.domElement.addEventListener('click', (event) => {
-            if (isDragging) return;
-            
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
-            
-            if (intersects.length > 0) {
-                let screenGroup = intersects[0].object;
-                while (screenGroup.parent && screenGroup.parent !== scene) {
-                    screenGroup = screenGroup.parent;
-                }
-                
-                const type = screenGroup.userData.type;
-                if (type) {
-                    console.log('🎯 Screen clicked:', type);
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1></h1>
+                <p class="subtitle">Machine Learning Engineer</p>
+                <p>
+                    I am Debajit Chakraborty, a Masters student studying CS at UT Austin. I am interested in LLMs, reinforcement learning and systems.
+                    Currently I am working on post-training of LLMs. Prior to this, I was fortunate enough to work at McKinsey & Company where I tried to solve some business problems. 
                     
-                    switch (type) {
-                        case 'blog':
-                            window.sessionStorage.setItem('fromOtherPage', 'true');
-                            window.location.href = 'blog.html';
-                            break;
-                        case 'home':
-                            console.log('🏠 Home screen clicked! Going back to main...');
-                            // Go back to main content
-                            const roomSection = document.getElementById('room-section');
-                            const mainContent = document.getElementById('main-content');
-                            const mainCursor = document.getElementById('main-cursor');
-                            const threeContainer = document.getElementById('three-container');
-                            
-                            if (roomSection) {
-                                roomSection.classList.remove('visible');
-                                roomSection.style.opacity = '0';
-                                roomSection.style.transform = 'translateY(100px) scale(0.95)';
-                            }
-                            
-                            if (mainContent) {
-                                mainContent.style.display = 'flex';
-                                mainContent.style.opacity = '1';
-                                mainContent.style.pointerEvents = 'auto';
-                                mainContent.style.transform = 'scale(1) translateY(0)';
-                                mainContent.style.filter = 'blur(0px) brightness(1)';
-                            }
-                            
-                            // Ensure Three.js container is visible and recreated if needed
-                            if (threeContainer) {
-                                threeContainer.style.display = 'block';
-                                threeContainer.style.opacity = '1';
-                            } else {
-                                // If Three.js container doesn't exist, recreate the main scene
-                                console.log('🔄 Three.js container not found, recreating main scene...');
-                                renderMainScene();
-                            }
-                            
-                            if (mainCursor) {
-                                mainCursor.style.opacity = '1';
-                                mainCursor.style.display = 'block';
-                            }
-                            
-                            // Reset room scene state so it can be re-initialized
-                            roomScene = null;
-                            
-                            isRoomVisible = false;
-                            window.scrollTo(0, 0);
-                            break;
-                        case 'cv':
-                            window.open('https://drive.google.com/file/d/12MAb2fnK6L5Efyq_UAlN5z8PLqtZWkAi/view?usp=sharing', '_blank');
-                            break;
-                        case 'about':
-                            window.sessionStorage.setItem('fromOtherPage', 'true');
-                            window.location.href = 'aboutme.html';
-                            break;
-                        case 'projects':
-                            window.sessionStorage.setItem('fromOtherPage', 'true');
-                            window.location.href = 'project.html';
-                            break;
+                    Link to my <a href="https://drive.google.com/file/d/12MAb2fnK6L5Efyq_UAlN5z8PLqtZWkAi/view?usp=sharing">CV</a>. 
+                    <br></br>Below are some of the things I have been up to
+                </p>
+    </div>
+    
+            <section class="section">
+                <table class="experience-table">
+                    <tbody id="experiences">
+                        <!-- Experiences will be loaded here -->
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="section life-section">
+                <h2>Life</h2>
+                <div class="life-content" id="life-content">
+                    <p>Add your interests and life description here. You can edit this directly in the HTML file by finding the element with id="life-content" and adding your content inside this div.</p>
+                </div>
+            </section>
+
+            <section class="section blog-section">
+                <h2>Blogs</h2>
+                <div id="main-blogs-list">
+                    <!-- Blogs will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script>
+        // Blog data embedded to avoid CORS issues when opening file://
+        // To update blogs, edit the JSON files and copy their content here
+        const blogData = [
+            {
+                "title": "How I built this site",
+                "date": "2024-07-08",
+                "content": "<h2>How I built this site</h2><div class='note-date'>2024-07-08</div><p>This is a placeholder note describing the process and technologies used to build this interactive 3D website. It uses Three.js, custom CSS, and a lot of creativity!</p>"
+            },
+            {
+                "title": "RL for noobs",
+                "date": "2024-12-15",
+                "content": "<h1>A Guide to the Two Major Types of Reinforcement Learning</h1><p>Reinforcement learning (RL) is a machine learning paradigm where an agent learns to make decisions by interacting with an environment. The agent receives rewards or penalties based on its actions and learns to maximize cumulative reward over time. There are two major approaches to solving RL problems: <strong>model-free</strong> and <strong>model-based</strong> reinforcement learning.</p><div class=\"image-container\" style=\"text-align: center; margin: 30px 0; border: 1px solid #ccc; padding: 20px;\"><p>[Add your reinforcement learning diagram or illustration here]</p><div style=\"margin-top: 10px; font-style: italic;\">Figure: Overview of Reinforcement Learning approaches</div></div><h2>Model-Free Reinforcement Learning</h2><p>Model-free RL methods learn directly from experience without building an explicit model of how the environment works. The agent learns a policy (how to act) or a value function (how good states/actions are) through trial and error.</p><p><strong>Key characteristics:</strong></p><ul><li>The agent doesn't try to understand or predict the environment's dynamics</li><li>Learning happens through direct interaction and observation of rewards</li><li>Generally simpler to implement but can require many interactions with the environment</li></ul><h3>Two main approaches:</h3><p><strong>Value-based methods</strong> learn to estimate the value of being in different states or taking different actions. The most famous example is Q-learning, where the agent learns a Q-function that estimates the expected future reward for each state-action pair. The agent then acts by choosing actions with the highest Q-values.</p><p><strong>Policy-based methods</strong> directly learn a policy that maps states to actions, often using gradient ascent to improve the policy. Examples include REINFORCE and actor-critic methods. These approaches can handle continuous action spaces more naturally than value-based methods.</p><p><strong>Example:</strong> Teaching a robot to walk. The robot tries different movements, receives rewards for making forward progress, and gradually learns which actions lead to better outcomes without understanding the physics of walking.</p><h2>Model-Based Reinforcement Learning</h2><p>Model-based RL methods first learn or use a model of the environment that predicts how the environment will respond to the agent's actions. This model can then be used for planning and decision-making.</p><p><strong>Key characteristics:</strong></p><ul><li>The agent builds an internal representation of environment dynamics (what happens when I take action A in state S?)</li><li>Can plan ahead by simulating future scenarios using the learned model</li><li>Typically more sample-efficient but computationally more complex</li></ul><h3>How it works:</h3><p>The agent learns a transition model P(s'|s,a) that predicts the next state given the current state and action, and sometimes a reward model R(s,a). With this model, the agent can \"imagine\" the consequences of different action sequences and choose the best one through planning algorithms like tree search.</p><p><strong>Example:</strong> A chess program that has learned the rules of chess (the model) can look ahead several moves to evaluate different strategies without actually playing those moves on the board.</p><h2>Comparing the Two Approaches</h2><p>Model-free methods excel when the environment is complex and difficult to model accurately, or when you have access to unlimited interactions with the real environment. They're also simpler to implement and debug.</p><p>Model-based methods shine when data is expensive or limited (like controlling real robots where crashes are costly), or when the environment follows predictable rules. Being able to plan using an internal model makes them more sample-efficient, though the quality of learning depends heavily on the accuracy of the learned model.</p><p>In practice, modern RL often combines both approaches, using model-based components to improve the sample efficiency of model-free algorithms. The choice between these approaches depends on your specific problem, computational resources, and how much experience you can afford to gather from the real environment.</p><h2>On-Policy vs Off-Policy: Another Important Distinction</h2><p>On-policy and off-policy represent a <strong>different type of division</strong> within reinforcement learning. This distinction is actually a subdivision <strong>within model-free RL</strong>, not related to the model-based vs model-free classification.</p><h3>The Classification Hierarchy</h3><p><strong>Main division:</strong> Model-free vs Model-based (as explained above)</p><p><strong>Within Model-free RL:</strong> On-policy vs Off-policy</p><h3>On-Policy Methods</h3><p>On-policy methods learn about and improve the same policy they're currently using to act. The agent learns from experience generated by its current policy.</p><p><strong>Examples:</strong></p><ul><li>SARSA (State-Action-Reward-State-Action)</li><li>Policy gradient methods like REINFORCE</li><li>A3C (Asynchronous Advantage Actor-Critic)</li></ul><p><strong>Key characteristic:</strong> \"I learn from what I'm currently doing\"</p><h3>Off-Policy Methods</h3><p>Off-policy methods can learn about one policy (the target policy) while following a different policy (the behavior policy). The agent can learn from experience generated by other policies, including old experiences or even human demonstrations.</p><p><strong>Examples:</strong></p><ul><li>Q-learning</li><li>DQN (Deep Q-Network)</li><li>DDPG (Deep Deterministic Policy Gradient)</li></ul><p><strong>Key characteristic:</strong> \"I can learn from data generated by other policies or my past behavior\"</p><h3>Why This Matters</h3><p>Off-policy methods are generally more sample-efficient because they can reuse old experience (through techniques like experience replay), while on-policy methods typically need fresh data from the current policy. However, on-policy methods are often more stable and easier to implement.</p><p><strong>Summary:</strong> Model-free vs model-based describes <strong>how</strong> the agent learns, while on-policy vs off-policy describes <strong>what data</strong> the agent learns from.</p>"
+            }
+        ];
+
+        // Load and display blogs
+        function loadBlogs() {
+            const blogList = document.getElementById('blog-list');
+            const mainBlogsList = document.getElementById('main-blogs-list');
+            
+            if (!blogList) {
+                console.error('blog-list element not found!');
+                return;
+            }
+            
+            try {
+                // Use embedded blog data
+                const blogs = [...blogData];
+                
+                console.log(`Total blogs loaded: ${blogs.length}`);
+
+                // Sort by date (newest first)
+                blogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (blogs.length === 0) {
+                    blogList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
+                    if (mainBlogsList) {
+                        mainBlogsList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
                     }
+                    return;
                 }
-            }
-        });
         
-        // Animation
-        const clock = new THREE.Clock();
-        let totalRotation = 0;
-        const autoRotateSpeed = 0.2;
-        let isDragging = false;
-        
-        // Drag controls
-        renderer.domElement.addEventListener('mousedown', () => { isDragging = true; });
-        window.addEventListener('mouseup', () => { isDragging = false; });
-        window.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                const dragSpeed = 0.005;
-                totalRotation -= e.movementX * dragSpeed;
+                // Display blogs in sidebar as table
+                blogList.innerHTML = `
+                    <table class="blog-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60%;">Title</th>
+                                <th style="width: 40%;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${blogs.map(blog => `
+                                <tr onclick="window.location.href='blog.html'">
+                                    <td class="blog-title">${blog.title}</td>
+                                    <td class="blog-date">${new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Also display blogs in the main content area as table
+                if (mainBlogsList) {
+                    mainBlogsList.innerHTML = `
+                        <table class="main-blog-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60%;">Title</th>
+                                    <th style="width: 40%;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${blogs.map(blog => `
+                                    <tr onclick="window.location.href='blog.html'">
+                                        <td class="blog-title">${blog.title}</td>
+                                        <td class="blog-date">${new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+                blogList.innerHTML = '<p style="color: var(--text-secondary);">Error loading blogs.</p>';
             }
-        });
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            const delta = clock.getDelta();
-            
-            if (!isDragging) {
-                totalRotation -= autoRotateSpeed * delta;
-            }
-            
-            screens.forEach((screen) => {
-                const angle = screen.userData.index / numScreens * Math.PI * 2 + totalRotation;
-                const radius = 18;
-                
-                screen.position.x = radius * Math.sin(angle);
-                screen.position.z = radius * Math.cos(angle);
-                screen.position.y = 2;
-                
-                screen.lookAt(0, screen.position.y, 0);
-            });
-            
-            renderer.render(scene, camera);
         }
-        
-        animate();
-        
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-        
-        // Custom cursor functionality
-        const cursor = document.getElementById('custom-cursor');
-        if (cursor) {
-            window.addEventListener('mousemove', (e) => {
-                cursor.style.left = e.clientX + 'px';
-                cursor.style.top = e.clientY + 'px';
-            });
-            
-            renderer.domElement.addEventListener('mousedown', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
-            });
-            
-            renderer.domElement.addEventListener('mouseup', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-            });
-            
-            window.addEventListener('mouseup', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-            });
-        }
-        
-        console.log('🎨 Three.js scene initialized');
-    }
-    
-    // Scroll event handler with improved transitions
-    function handleScroll() {
-        const scrollY = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const scrollThreshold = windowHeight * 0.15; // Slightly higher threshold for better UX
-        const maxScroll = windowHeight * 0.8; // Maximum scroll for full transition
-        
-        const roomSection = document.getElementById('room-section');
-        const mainContent = document.getElementById('main-content');
-        const scrollIndicator = document.querySelector('.scroll-indicator');
-        
-        // Calculate transition progress (0 to 1)
-        const progress = Math.max(0, Math.min(1, (scrollY - scrollThreshold) / (maxScroll - scrollThreshold)));
-        
-        if (scrollY > scrollThreshold) {
-            if (!isRoomVisible) {
-                isRoomVisible = true;
-                if (mainCursor) mainCursor.style.opacity = '0';
-                console.log('🎬 Starting room transition...');
-                
-                // Progressive main content fade out
-                if (mainContent) {
-                    mainContent.style.transition = 'opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                    mainContent.style.opacity = '0';
-                    mainContent.style.pointerEvents = 'none';
-                    mainContent.style.transform = 'scale(1.08) translateY(-20px)';
-                    mainContent.style.filter = 'blur(12px) brightness(0.7)';
+
+        // Load and display experiences
+        function loadExperiences() {
+            // Current experiences - just year and description
+            const currentExperiences = [
+                {
+                    year: '2025',
+                    description: 'Add your description here'
                 }
-                
-                // Hide scroll indicator with fade
-                if (scrollIndicator) {
-                    scrollIndicator.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
-                    scrollIndicator.style.opacity = '0';
-                    scrollIndicator.style.transform = 'translateX(-50%) translateY(20px)';
+            ];
+
+            // Previous experiences
+            const previousExperiences = [
+                {
+                    year: '2024',
+                    description: 'Graduate Research Assistant at The University of Texas at Austin. Worked with Dr. Aditya Akella and Dr. Sanjay Shakkotai on solving problems in using learned representations of network state. Research at the intersection of reinforcement learning and networked systems.'
+                },
+                {
+                    year: '2022-2024',
+                    description: 'Business Analyst, Digital at McKinsey & Company. Built 40 mil$ pipeline for 10+ medtech & life sciences target clients. Estimated INR 130cr+ technical debt accrued by 150+ legacy applications. Conducted application owner workshops to analyze system infrastructure, integrations, legacy code, and security.'
+                },
+                {
+                    year: '2022-2024',
+                    description: 'Backend Developer at Goldcast. Implemented new scheduling techniques for service requests and setup monitoring, alerting for AWS infrastructure. Leveraged Django to build and scale back-end; implemented IaaC (Terraform) to migrate resources without breaking changes.'
+                },
+                {
+                    year: '2021',
+                    description: 'Quantitative Researcher Intern at Quadeye Securities. Built robust models which predicted price movement to generate buy-sell triggers for novel aggressive intraday-trading strategy. Used event-driven architecture to aggregate data trends and tracked various market activities through Limit Order Book.'
                 }
-                
-                // Show room section with enhanced animation
-                roomSection.style.transition = 'opacity 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                roomSection.classList.add('visible');
-                
-                // Load room content with delay for smooth transition
-                setTimeout(() => {
-                    initRoomScene();
-                }, 300);
-                
-                // Progressive overlay effect - DISABLED to show background video
-                // setTimeout(() => {
-                //     const overlay = document.querySelector('.room-overlay');
-                //     if (overlay) {
-                //         overlay.style.transition = 'opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                //         overlay.classList.add('active');
-                //     }
-                // }, 800);
-                
+            ];
+
+            const experiencesContainer = document.getElementById('experiences');
+            let html = '';
+
+            // Add "Currently" section header
+            html += '<tr class="experience-section-header"><td colspan="2">Currently</td></tr>';
+            
+            // Add current experiences
+            if (currentExperiences.length === 0) {
+                html += '<tr><td colspan="2" style="text-align: center; color: var(--text-secondary);">No current experiences.</td></tr>';
             } else {
-                // Update transition progress for smooth scrolling
-                updateTransitionProgress(progress);
+                html += currentExperiences.map(exp => `
+                    <tr>
+                        <td class="experience-year">${exp.year}</td>
+                        <td class="experience-description">${exp.description}</td>
+                    </tr>
+                `).join('');
             }
-        } else {
-            if (isRoomVisible) {
-                isRoomVisible = false;
-                if (mainCursor) mainCursor.style.opacity = '1';
-                console.log('🔄 Reverting to main content...');
-                
-                // Smooth room section fade out
-                roomSection.style.transition = 'opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                roomSection.classList.remove('visible');
-                
-                // Progressive main content restoration
-                if (mainContent) {
-                    mainContent.style.transition = 'opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                    mainContent.style.opacity = '1';
-                    mainContent.style.pointerEvents = 'auto';
-                    mainContent.style.transform = 'scale(1) translateY(0)';
-                    mainContent.style.filter = 'blur(0px) brightness(1)';
-                }
-                
-                // Show scroll indicator with fade in
-                if (scrollIndicator) {
-                    scrollIndicator.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-                    scrollIndicator.style.opacity = '0.8';
-                    scrollIndicator.style.transform = 'translateX(-50%) translateY(0)';
-                }
-                
-                // Remove overlay
-                const overlay = document.querySelector('.room-overlay');
-                if (overlay) {
-                    overlay.style.transition = 'opacity 0.5s ease-out';
-                    overlay.classList.remove('active');
-                }
+
+            // Add "Previously" section header
+            html += '<tr class="experience-section-header"><td colspan="2">Previously</td></tr>';
+            
+            // Add previous experiences
+            if (previousExperiences.length === 0) {
+                html += '<tr><td colspan="2" style="text-align: center; color: var(--text-secondary);">No previous experiences.</td></tr>';
             } else {
-                // Update transition progress for smooth scrolling
-                updateTransitionProgress(progress);
+                html += previousExperiences.map(exp => `
+                    <tr>
+                        <td class="experience-year">${exp.year}</td>
+                        <td class="experience-description">${exp.description}</td>
+                    </tr>
+                `).join('');
             }
+
+            experiencesContainer.innerHTML = html;
         }
-    }
-    
-    // Function to update transition progress for smooth scrolling
-    function updateTransitionProgress(progress) {
-        const mainContent = document.getElementById('main-content');
-        const scrollIndicator = document.querySelector('.scroll-indicator');
-        
-        if (mainContent && progress > 0) {
-            // Progressive main content transformation
-            const opacity = Math.max(0, 1 - progress * 1.2);
-            const scale = 1 + (progress * 0.08);
-            const translateY = -progress * 20;
-            const blur = progress * 12;
-            const brightness = Math.max(0.7, 1 - progress * 0.3);
-            
-            mainContent.style.opacity = opacity;
-            mainContent.style.transform = `scale(${scale}) translateY(${translateY}px)`;
-            mainContent.style.filter = `blur(${blur}px) brightness(${brightness})`;
-            
-            if (progress > 0.5) {
-                mainContent.style.pointerEvents = 'none';
-            }
-        }
-        
-        if (scrollIndicator && progress > 0) {
-            // Progressive scroll indicator fade
-            const indicatorOpacity = Math.max(0, 0.8 - progress * 1.5);
-            const indicatorTranslateY = progress * 20;
-            
-            scrollIndicator.style.opacity = indicatorOpacity;
-            scrollIndicator.style.transform = `translateX(-50%) translateY(${indicatorTranslateY}px)`;
-        }
-    }
-    
-    // Add scroll event listener
-    window.addEventListener('scroll', handleScroll);
-    
-    // Handle window resize
-    window.addEventListener('resize', () => {
-        // Iframe will handle its own resizing
-    });
-    
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBlogs();
+            loadExperiences();
+        });
     </script>
 </body>
 </html>
