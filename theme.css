@@ -1,0 +1,58 @@
+/* Light mode (default) */
+:root,
+[data-theme="light"] {
+    --text-primary: #2d2d2d;
+    --text-secondary: #6b7280;
+    --text-muted: #444;
+    --bg-primary: #fefbf3;
+    --bg-secondary: #faf9f6;
+    --bg-card: #fff;
+    --bg-hover: #ececec;
+    --accent: #d97706;
+    --border: #e5e7eb;
+    --shadow: rgba(0,0,0,0.05);
+    --overlay: rgba(0,0,0,0.2);
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --text-muted: #d1d5db;
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-card: #1f2937;
+    --bg-hover: #374151;
+    --accent: #f59e0b;
+    --border: #374151;
+    --shadow: rgba(0,0,0,0.3);
+    --overlay: rgba(0,0,0,0.5);
+}
+
+/* Theme toggle button */
+#theme-toggle {
+    position: fixed;
+    top: 8px;
+    right: 22px;
+    z-index: 20;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+#theme-toggle:hover {
+    background: var(--bg-hover);
+}
+#theme-toggle svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--text-primary);
+    stroke-width: 2;
+    fill: none;
+}

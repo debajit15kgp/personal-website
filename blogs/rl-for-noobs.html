@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL for noobs - Debajit</title>
+    <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="icon" type="image/png" href="../icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="blog-common.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem 3rem;
+        }
+        h1, h2, h3 {
+            color: var(--text-primary);
+        }
+        p, ul, li {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+            border: 1px solid var(--border);
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="blog-nav">
+        <div class="nav-left">
+            <button id="back-btn" onclick="window.location.href='../index.html'" aria-label="Back to home">
+                <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+            </button>
+            <button id="blog-toggle" aria-label="Toggle blog list" aria-expanded="false">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+        </div>
+        <button id="theme-toggle" aria-label="Toggle theme"></button>
+    </nav>
+    <div id="blog-sidebar-overlay" class="blog-sidebar-overlay"></div>
+    <aside id="blog-sidebar" class="blog-sidebar"></aside>
+
+    <main class="container">
+        <h1>A Guide to the Two Major Types of Reinforcement Learning</h1>
+        <p>Reinforcement learning (RL) is a machine learning paradigm where an agent learns to make decisions by interacting with an environment. The agent receives rewards or penalties based on its actions and learns to maximize cumulative reward over time. There are two major approaches to solving RL problems: <strong>model-free</strong> and <strong>model-based</strong> reinforcement learning.</p>
+        <div class="image-container">
+            <p>[Add your reinforcement learning diagram or illustration here]</p>
+            <div style="margin-top: 10px; font-style: italic;">Figure: Overview of Reinforcement Learning approaches</div>
+        </div>
+        <h2>Model-Free Reinforcement Learning</h2>
+        <p>Model-free RL methods learn directly from experience without building an explicit model of how the environment works. The agent learns a policy (how to act) or a value function (how good states/actions are) through trial and error.</p>
+        <p><strong>Key characteristics:</strong></p>
+        <ul>
+            <li>The agent doesn't try to understand or predict the environment's dynamics</li>
+            <li>Learning happens through direct interaction and observation of rewards</li>
+            <li>Generally simpler to implement but can require many interactions with the environment</li>
+        </ul>
+        <h3>Two main approaches:</h3>
+        <p><strong>Value-based methods</strong> learn to estimate the value of being in different states or taking different actions. The most famous example is Q-learning, where the agent learns a Q-function that estimates the expected future reward for each state-action pair. The agent then acts by choosing actions with the highest Q-values.</p>
+        <p><strong>Policy-based methods</strong> directly learn a policy that maps states to actions, often using gradient ascent to improve the policy. Examples include REINFORCE and actor-critic methods. These approaches can handle continuous action spaces more naturally than value-based methods.</p>
+        <p><strong>Example:</strong> Teaching a robot to walk. The robot tries different movements, receives rewards for making forward progress, and gradually learns which actions lead to better outcomes without understanding the physics of walking.</p>
+        <h2>Model-Based Reinforcement Learning</h2>
+        <p>Model-based RL methods first learn or use a model of the environment that predicts how the environment will respond to the agent's actions. This model can then be used for planning and decision-making.</p>
+        <p><strong>Key characteristics:</strong></p>
+        <ul>
+            <li>The agent builds an internal representation of environment dynamics (what happens when I take action A in state S?)</li>
+            <li>Can plan ahead by simulating future scenarios using the learned model</li>
+            <li>Typically more sample-efficient but computationally more complex</li>
+        </ul>
+        <h3>How it works:</h3>
+        <p>The agent learns a transition model P(s'|s,a) that predicts the next state given the current state and action, and sometimes a reward model R(s,a). With this model, the agent can "imagine" the consequences of different action sequences and choose the best one through planning algorithms like tree search.</p>
+        <p><strong>Example:</strong> A chess program that has learned the rules of chess (the model) can look ahead several moves to evaluate different strategies without actually playing those moves on the board.</p>
+        <h2>Comparing the Two Approaches</h2>
+        <p>Model-free methods excel when the environment is complex and difficult to model accurately, or when you have access to unlimited interactions with the real environment. They're also simpler to implement and debug.</p>
+        <p>Model-based methods shine when data is expensive or limited (like controlling real robots where crashes are costly), or when the environment follows predictable rules. Being able to plan using an internal model makes them more sample-efficient, though the quality of learning depends heavily on the accuracy of the learned model.</p>
+        <p>In practice, modern RL often combines both approaches, using model-based components to improve the sample efficiency of model-free algorithms. The choice between these approaches depends on your specific problem, computational resources, and how much experience you can afford to gather from the real environment.</p>
+        <h2>On-Policy vs Off-Policy: Another Important Distinction</h2>
+        <p>On-policy and off-policy represent a <strong>different type of division</strong> within reinforcement learning. This distinction is actually a subdivision <strong>within model-free RL</strong>, not related to the model-based vs model-free classification.</p>
+        <h3>The Classification Hierarchy</h3>
+        <p><strong>Main division:</strong> Model-free vs Model-based (as explained above)</p>
+        <p><strong>Within Model-free RL:</strong> On-policy vs Off-policy</p>
+        <h3>On-Policy Methods</h3>
+        <p>On-policy methods learn about and improve the same policy they're currently using to act. The agent learns from experience generated by its current policy.</p>
+        <p><strong>Examples:</strong></p>
+        <ul>
+            <li>SARSA (State-Action-Reward-State-Action)</li>
+            <li>Policy gradient methods like REINFORCE</li>
+            <li>A3C (Asynchronous Advantage Actor-Critic)</li>
+        </ul>
+        <p><strong>Key characteristic:</strong> "I learn from what I'm currently doing"</p>
+        <h3>Off-Policy Methods</h3>
+        <p>Off-policy methods can learn about one policy (the target policy) while following a different policy (the behavior policy). The agent can learn from experience generated by other policies, including old experiences or even human demonstrations.</p>
+        <p><strong>Examples:</strong></p>
+        <ul>
+            <li>Q-learning</li>
+            <li>DQN (Deep Q-Network)</li>
+            <li>DDPG (Deep Deterministic Policy Gradient)</li>
+        </ul>
+        <p><strong>Key characteristic:</strong> "I can learn from data generated by other policies or my past behavior"</p>
+        <h3>Why This Matters</h3>
+        <p>Off-policy methods are generally more sample-efficient because they can reuse old experience (through techniques like experience replay), while on-policy methods typically need fresh data from the current policy. However, on-policy methods are often more stable and easier to implement.</p>
+        <p><strong>Summary:</strong> Model-free vs model-based describes <strong>how</strong> the agent learns, while on-policy vs off-policy describes <strong>what data</strong> the agent learns from.</p>
+    </main>
+    <script src="../theme.js"></script>
+    <script src="blogs-list.js"></script>
+</body>
+</html>
+

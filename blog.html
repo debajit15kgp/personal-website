@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog - Debajit</title>
+    <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Didot:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
         body {
             margin: 0;
             min-height: 100vh;
-            background: #fefbf3;
-            color: #232323;
-            font-family: 'Didot', serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
         }
         #back-btn {
             position: fixed;
@@ -33,12 +35,12 @@
             transition: background 0.18s;
         }
         #back-btn:hover {
-            background: #ececec;
+            background: var(--bg-hover);
         }
         #back-btn svg {
             width: 22px;
             height: 22px;
-            stroke: #232323;
+            stroke: var(--text-primary);
             stroke-width: 2.5;
             fill: none;
         }
@@ -50,8 +52,8 @@
         /* Left Sidebar */
         .sidebar {
             width: 280px;
-            background: #faf9f6;
-            border-right: 1.5px solid #ececec;
+            background: var(--bg-secondary);
+            border-right: 1.5px solid var(--border);
             padding: 2rem 1.5rem;
             position: fixed;
             height: 100vh;
@@ -69,36 +71,36 @@
             font-size: 1.8rem;
             font-weight: 600;
             margin-bottom: 1.5rem;
-            color: #232323;
+            color: var(--text-primary);
         }
         .blogs-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background: var(--bg-card);
+            box-shadow: 0 2px 8px var(--shadow);
         }
         .blogs-table thead {
-            background: #faf9f6;
-            border-bottom: 2px solid #ececec;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
         }
         .blogs-table th {
             padding: 0.8rem 1rem;
             text-align: left;
             font-weight: 600;
-            color: #232323;
+            color: var(--text-primary);
             font-size: 0.9rem;
-            border-right: 1px solid #ececec;
+            border-right: 1px solid var(--border);
         }
         .blogs-table th:last-child {
             border-right: none;
         }
         .blogs-table td {
             padding: 0.8rem 1rem;
-            border-bottom: 1px solid #ececec;
-            border-right: 1px solid #ececec;
-            color: #444;
-            font-family: 'Helvetica Neue', sans-serif;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
         }
         .blogs-table td:last-child {
             border-right: none;
@@ -108,19 +110,19 @@
             cursor: pointer;
         }
         .blogs-table tbody tr:hover {
-            background: #faf9f6;
+            background: var(--bg-secondary);
         }
         .blog-title {
             font-weight: 500;
-            color: #232323;
-            font-family: 'Didot', serif;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
         }
         .blog-date {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.8rem;
         }
         .blog-preview {
-            color: #666;
+            color: var(--text-secondary);
             max-width: 500px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -131,7 +133,7 @@
             margin-top: 2rem;
             padding: 2rem;
             background: #fff;
-            border: 1px solid #ececec;
+            border: 1px solid var(--border);
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
@@ -142,18 +144,18 @@
             font-size: 1.4rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
-            color: #232323;
+            color: var(--text-primary);
         }
         .blog-content .blog-date {
             font-size: 0.85rem;
-            color: #999;
+            color: var(--text-secondary);
             margin-bottom: 1.5rem;
         }
         .blog-content .content-body {
-            font-family: 'Helvetica Neue', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
             line-height: 1.6;
-            color: #444;
+            color: var(--text-muted);
         }
         .blog-content .content-body p {
             margin-bottom: 1rem;
@@ -163,14 +165,14 @@
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: #666;
+            color: var(--text-secondary);
             cursor: pointer;
             padding: 0;
             line-height: 1;
             transition: color 0.2s;
         }
         .close-content:hover {
-            color: #232323;
+            color: var(--text-primary);
         }
         @media (max-width: 968px) {
             .sidebar {
@@ -206,6 +208,7 @@
     </style>
 </head>
 <body>
+    <button id="theme-toggle" aria-label="Toggle theme"></button>
     <button id="back-btn" onclick="window.location.href='index.html'" aria-label="Back">
         <svg viewBox="0 0 24 24">
             <path d="M15 5l-7 7 7 7"/>
@@ -238,109 +241,41 @@
         </main>
     </div>
     
+    <script src="theme.js"></script>
+    <script src="blogs/blogs-list.js"></script>
     <script>
-        // Load blogs from JSON files
-        async function loadBlogs() {
-            // Get all JSON files from blogs folder
-            const blogFiles = ['blogs/note1.json', 'blogs/rl-for-noobs.json']; // Add more files as needed: 'blogs/note2.json', etc.
-            const blogs = [];
-            
-            for (const file of blogFiles) {
-                try {
-                    const response = await fetch(file);
-                    if (response.ok) {
-                        const blog = await response.json();
-                        blogs.push(blog);
-                    }
-                } catch (error) {
-                    console.error(`Error loading ${file}:`, error);
-                }
-            }
-            
-            // Sort by date (newest first)
-            blogs.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            return blogs;
-        }
-        
-        // Strip HTML tags for preview
-        function stripHtml(html) {
-            const tmp = document.createElement('DIV');
-            tmp.innerHTML = html;
-            return tmp.textContent || tmp.innerText || '';
-        }
-        
-        // Format date
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         }
-        
-        // Render blogs table
-        async function renderBlogsTable() {
-            const blogs = await loadBlogs();
+
+        function renderBlogsTable() {
             const tbody = document.getElementById('blogs-tbody');
-            
-            if (blogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No blogs available yet.</td></tr>';
+            const blogs = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []).map(b => ({
+                ...b,
+                url: 'blogs/' + b.url
+            }));
+
+            if (!blogs.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No blogs available yet.</td></tr>';
                 return;
             }
-            
-            tbody.innerHTML = blogs.map((blog, index) => {
-                const preview = stripHtml(blog.content).substring(0, 100) + '...';
-                return `
-                    <tr onclick="showBlogContent(${index})">
-                        <td>${index + 1}</td>
-                        <td class="blog-title">${blog.title}</td>
-                        <td class="blog-date">${formatDate(blog.date)}</td>
-                        <td class="blog-preview">${preview}</td>
-                    </tr>
-                `;
-            }).join('');
-            
-            // Store blogs globally for content display
-            window.blogs = blogs;
+
+            const sorted = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            tbody.innerHTML = sorted.map((blog, index) => `
+                <tr onclick="window.location.href='${blog.url}'">
+                    <td>${index + 1}</td>
+                    <td class="blog-title">${blog.title}</td>
+                    <td class="blog-date">${formatDate(blog.date)}</td>
+                    <td class="blog-preview"></td>
+                </tr>
+            `).join('');
         }
-        
-        // Show blog content
-        function showBlogContent(index) {
-            const blog = window.blogs[index];
-            const contentDiv = document.getElementById('blog-content');
-            
-            contentDiv.innerHTML = `
-                <button class="close-content" onclick="closeBlogContent()">&times;</button>
-                <h2>${blog.title}</h2>
-                <div class="blog-date">${formatDate(blog.date)}</div>
-                <div class="content-body">${blog.content}</div>
-            `;
-            
-            contentDiv.classList.add('active');
-            contentDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        
-        // Close blog content
-        function closeBlogContent() {
-            const contentDiv = document.getElementById('blog-content');
-            contentDiv.classList.remove('active');
-        }
-        
-        // Keyboard navigation - Escape key to go back
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-                const contentDiv = document.getElementById('blog-content');
-                if (contentDiv.classList.contains('active')) {
-                    closeBlogContent();
-                } else {
-            sessionStorage.setItem('showRoomScene', 'true');
-            window.location.href = 'index.html';
-        }
-            }
-        });
-        
-        // Initialize on page load
+
         document.addEventListener('DOMContentLoaded', () => {
             renderBlogsTable();
-    });
+        });
     </script>
 </body>
 </html> 

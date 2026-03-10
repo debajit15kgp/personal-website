@@ -1,0 +1,119 @@
+@import url('../theme.css');
+
+#back-btn {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+#back-btn:hover {
+    background: var(--bg-hover);
+}
+#back-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--text-primary);
+    stroke-width: 2.5;
+    fill: none;
+}
+.blog-nav {
+    position: fixed;
+    top: 8px;
+    left: 22px;
+    right: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 20;
+}
+.blog-nav .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#blog-toggle {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+#blog-toggle:hover {
+    background: var(--bg-hover);
+}
+#blog-toggle svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--text-primary);
+    stroke-width: 2;
+    fill: none;
+}
+.blog-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-right: 1.5px solid var(--border);
+    padding: 3rem 1.5rem 2rem;
+    box-shadow: 4px 0 20px var(--shadow);
+    z-index: 25;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+}
+.blog-sidebar.open {
+    transform: translateX(0);
+}
+.blog-sidebar h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+.blog-sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.blog-sidebar li {
+    margin-bottom: 0.5rem;
+}
+.blog-sidebar a {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    display: block;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid transparent;
+}
+.blog-sidebar a:hover {
+    color: var(--text-primary);
+}
+.blog-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 24;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.blog-sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
