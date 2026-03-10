@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -160,6 +162,14 @@
         .blog-content .content-body p {
             margin-bottom: 1rem;
         }
+        .blog-content .content-body img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
         .close-content {
             float: right;
             background: none;
@@ -226,9 +236,9 @@
                 <thead>
                     <tr>
                         <th style="width: 5%;">#</th>
-                        <th style="width: 30%;">Title</th>
-                        <th style="width: 15%;">Date</th>
-                        <th style="width: 50%;">Preview</th>
+                        <th style="width: 45%;">Title</th>
+                        <th style="width: 20%;">Date</th>
+                        <th style="width: 35%;">Preview</th>
                     </tr>
                 </thead>
                 <tbody id="blogs-tbody">
@@ -244,40 +254,160 @@
     <script src="theme.js"></script>
     <script src="blogs/blogs-list.js"></script>
     <script>
+        // Simple frontmatter parser
+        function parseFrontmatter(text) {
+            const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
+            const match = text.match(frontmatterRegex);
+            if (!match) return { attributes: {}, body: text };
+            const attributes = {};
+            const yamlBlock = match[1];
+            const body = match[2];
+            yamlBlock.split('\n').forEach(line => {
+                const parts = line.split(':');
+                if (parts.length >= 2) {
+                    const key = parts[0].trim();
+                    const value = parts.slice(1).join(':').trim().replace(/^["']|["']$/g, '');
+                    attributes[key] = value;
+                }
+            });
+            return { attributes, body };
+        }
+
+        function isHtmlPath(path) {
+            return typeof path === 'string' && path.endsWith('.html');
+        }
+
+        // Load a single blog content
+        async function fetchBlogContent(path) {
+            if (isHtmlPath(path)) {
+                window.location.href = path;
+                return null;
+            }
+
+            try {
+                const response = await fetch(path);
+                if (!response.ok) throw new Error('Could not load blog');
+                
+                if (path.endsWith('.json')) {
+                    const data = await response.json();
+                    return data;
+                } else if (path.endsWith('.md')) {
+                    const text = await response.text();
+                    const { attributes, body } = parseFrontmatter(text);
+                    return {
+                        title: attributes.title || 'Untitled',
+                        date: attributes.date || '2024-01-01',
+                        content: marked.parse(body)
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching blog:', error);
+                return null;
+            }
+        }
+
+        // Format date
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         }
 
-        function renderBlogsTable() {
+        // Render blogs table
+        async function renderBlogsTable() {
             const tbody = document.getElementById('blogs-tbody');
-            const blogs = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []).map(b => ({
-                ...b,
-                url: 'blogs/' + b.url
-            }));
+            if (!tbody) return;
+
+            let blogs = [];
+            try {
+                const response = await fetch('blogs/registry.json');
+                if (!response.ok) throw new Error('Could not load registry');
+                blogs = await response.json();
+            } catch (error) {
+                // Fallback to BLOG_LIST for older deployments or file://
+                const list = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []);
+                blogs = list.map((b) => ({
+                    title: b.title,
+                    date: b.date,
+                    path: `blogs/${b.url}`
+                }));
+            }
 
             if (!blogs.length) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No blogs available yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No blogs available yet.</td></tr>';
                 return;
             }
 
             const sorted = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sorted.map((blog, index) => {
+                const onClick = isHtmlPath(blog.path)
+                    ? `window.location.href='${blog.path}'`
+                    : `showBlogContent('${blog.path}')`;
+                return `
+                    <tr onclick="${onClick}">
+                        <td>${index + 1}</td>
+                        <td class="blog-title">${blog.title}</td>
+                        <td class="blog-date">${formatDate(blog.date)}</td>
+                        <td class="blog-preview">Click to read...</td>
+                    </tr>
+                `;
+            }).join('');
 
-            tbody.innerHTML = sorted.map((blog, index) => `
-                <tr onclick="window.location.href='${blog.url}'">
-                    <td>${index + 1}</td>
-                    <td class="blog-title">${blog.title}</td>
-                    <td class="blog-date">${formatDate(blog.date)}</td>
-                    <td class="blog-preview"></td>
-                </tr>
-            `).join('');
+            // Check for URL parameter to load a specific blog
+            const urlParams = new URLSearchParams(window.location.search);
+            const postPath = urlParams.get('post');
+            if (postPath) {
+                if (isHtmlPath(postPath)) {
+                    window.location.href = postPath;
+                } else {
+                    showBlogContent(postPath);
+                }
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderBlogsTable();
+        // Show blog content
+        async function showBlogContent(path) {
+            const blog = await fetchBlogContent(path);
+            if (!blog) return;
+
+            const contentDiv = document.getElementById('blog-content');
+            contentDiv.innerHTML = `
+                <button class="close-content" onclick="closeBlogContent()">&times;</button>
+                <h2>${blog.title}</h2>
+                <div class="blog-date">${formatDate(blog.date)}</div>
+                <div class="content-body">${blog.content}</div>
+            `;
+            
+            contentDiv.classList.add('active');
+            contentDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Update URL without reloading
+            const newUrl = window.location.pathname + '?post=' + encodeURIComponent(path);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+        }
+        
+        // Close blog content
+        function closeBlogContent() {
+            const contentDiv = document.getElementById('blog-content');
+            contentDiv.classList.remove('active');
+            // Remove URL parameter
+            window.history.pushState({}, '', window.location.pathname);
+        }
+        
+        // Escape key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const contentDiv = document.getElementById('blog-content');
+                if (contentDiv.classList.contains('active')) {
+                    closeBlogContent();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            }
         });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', renderBlogsTable);
     </script>
 </body>
-</html> 
-
-
+</html>

@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --text-primary: #2d2d2d;
@@ -519,141 +521,82 @@
     <script src="theme.js"></script>
     <script src="blogs/blogs-list.js"></script>
     <script>
-        // Load and display blogs (uses BLOG_LIST from blogs/blogs-list.js)
-        function loadBlogs() {
+        // Load and display blogs from registry.json
+        async function loadBlogs() {
             const blogList = document.getElementById('blog-list');
             const mainBlogsList = document.getElementById('main-blogs-list');
             
-            if (!blogList) {
-                console.error('blog-list element not found!');
+            if (!blogList) return;
+
+            let blogs = [];
+            try {
+                const response = await fetch('blogs/registry.json');
+                if (!response.ok) throw new Error('Could not load registry');
+                blogs = await response.json();
+            } catch (error) {
+                const list = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []);
+                blogs = list.map((b) => ({
+                    title: b.title,
+                    date: b.date,
+                    path: `blogs/${b.url}`
+                }));
+            }
+
+            if (blogs.length === 0) {
+                blogList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
+                if (mainBlogsList) mainBlogsList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
                 return;
             }
-            
-            try {
-                const blogs = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []).map(b => ({
-                    ...b,
-                    url: 'blogs/' + b.url
-                }));
 
-                // Sort by date (newest first)
-                blogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const sorted = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+            const getBlogUrl = (path) => {
+                if (typeof path !== 'string') return 'blog.html';
+                return path.endsWith('.html')
+                    ? path
+                    : `blog.html?post=${encodeURIComponent(path)}`;
+            };
 
-                if (blogs.length === 0) {
-                    blogList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
-                    if (mainBlogsList) {
-                        mainBlogsList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
-                    }
-                    return;
-                }
-        
-                // Display blogs in sidebar as table
-                blogList.innerHTML = `
-                    <table class="blog-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 60%;">Title</th>
-                                <th style="width: 40%;">Date</th>
+            const tableHtml = (isMain) => `
+                <table class="${isMain ? 'main-blog-table' : 'blog-table'}">
+                    <thead>
+                        <tr>
+                                <th style="width: 55%;">Title</th>
+                                <th style="width: 45%;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sorted.map(blog => `
+                            <tr onclick="window.location.href='${getBlogUrl(blog.path)}'">
+                                <td class="blog-title">${blog.title}</td>
+                                <td class="blog-date">${new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${blogs.map(blog => `
-                                <tr onclick="window.location.href='${blog.url}'">
-                                    <td class="blog-title">${blog.title}</td>
-                                    <td class="blog-date">${new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
 
-                // Also display blogs in the main content area as table
-                if (mainBlogsList) {
-                    mainBlogsList.innerHTML = `
-                        <table class="main-blog-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60%;">Title</th>
-                                    <th style="width: 40%;">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${blogs.map(blog => `
-                                    <tr onclick="window.location.href='${blog.url}'">
-                                        <td class="blog-title">${blog.title}</td>
-                                        <td class="blog-date">${new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading blogs:', error);
-                blogList.innerHTML = '<p style="color: var(--text-secondary);">Error loading blogs.</p>';
-            }
+            blogList.innerHTML = tableHtml(false);
+            if (mainBlogsList) mainBlogsList.innerHTML = tableHtml(true);
         }
 
         function loadExperiences() {
-            // Current experiences - just year and description
             const currentExperiences = [
-                {
-                    year: '2025',
-                    description: 'Add your description here'
-                }
+                { year: '2025', description: 'Add your description here' }
             ];
-
-            // Previous experiences
             const previousExperiences = [
-                {
-                    year: '2024',
-                    description: 'Graduate Research Assistant at The University of Texas at Austin. Worked with Dr. Aditya Akella and Dr. Sanjay Shakkotai on solving problems in using learned representations of network state. Research at the intersection of reinforcement learning and networked systems.'
-                },
-                {
-                    year: '2022-2024',
-                    description: 'Business Analyst, Digital at McKinsey & Company. Built 40 mil$ pipeline for 10+ medtech & life sciences target clients. Estimated INR 130cr+ technical debt accrued by 150+ legacy applications. Conducted application owner workshops to analyze system infrastructure, integrations, legacy code, and security.'
-                },
-                {
-                    year: '2022-2024',
-                    description: 'Backend Developer at Goldcast. Implemented new scheduling techniques for service requests and setup monitoring, alerting for AWS infrastructure. Leveraged Django to build and scale back-end; implemented IaaC (Terraform) to migrate resources without breaking changes.'
-                },
-                {
-                    year: '2021',
-                    description: 'Quantitative Researcher Intern at Quadeye Securities. Built robust models which predicted price movement to generate buy-sell triggers for novel aggressive intraday-trading strategy. Used event-driven architecture to aggregate data trends and tracked various market activities through Limit Order Book.'
-                }
+                { year: '2024', description: 'Graduate Research Assistant at The University of Texas at Austin. Worked with Dr. Aditya Akella and Dr. Sanjay Shakkotai on solving problems in using learned representations of network state. Research at the intersection of reinforcement learning and networked systems.' },
+                { year: '2022-2024', description: 'Business Analyst, Digital at McKinsey & Company. Built 40 mil$ pipeline for 10+ medtech & life sciences target clients. Estimated INR 130cr+ technical debt accrued by 150+ legacy applications. Conducted application owner workshops to analyze system infrastructure, integrations, legacy code, and security.' },
+                { year: '2022-2024', description: 'Backend Developer at Goldcast. Implemented new scheduling techniques for service requests and setup monitoring, alerting for AWS infrastructure. Leveraged Django to build and scale back-end; implemented IaaC (Terraform) to migrate resources without breaking changes.' },
+                { year: '2021', description: 'Quantitative Researcher Intern at Quadeye Securities. Built robust models which predicted price movement to generate buy-sell triggers for novel aggressive intraday-trading strategy. Used event-driven architecture to aggregate data trends and tracked various market activities through Limit Order Book.' }
             ];
 
             const experiencesContainer = document.getElementById('experiences');
-            let html = '';
-
-            // Add "Currently" section header
-            html += '<tr class="experience-section-header"><td colspan="2">Currently</td></tr>';
+            let html = '<tr class="experience-section-header"><td colspan="2">Currently</td></tr>';
             
-            // Add current experiences
-            if (currentExperiences.length === 0) {
-                html += '<tr><td colspan="2" style="text-align: center; color: var(--text-secondary);">No current experiences.</td></tr>';
-            } else {
-                html += currentExperiences.map(exp => `
-                    <tr>
-                        <td class="experience-year">${exp.year}</td>
-                        <td class="experience-description">${exp.description}</td>
-                    </tr>
-                `).join('');
-            }
-
-            // Add "Previously" section header
+            html += currentExperiences.map(exp => `<tr><td class="experience-year">${exp.year}</td><td class="experience-description">${exp.description}</td></tr>`).join('');
             html += '<tr class="experience-section-header"><td colspan="2">Previously</td></tr>';
-            
-            // Add previous experiences
-            if (previousExperiences.length === 0) {
-                html += '<tr><td colspan="2" style="text-align: center; color: var(--text-secondary);">No previous experiences.</td></tr>';
-            } else {
-                html += previousExperiences.map(exp => `
-                    <tr>
-                        <td class="experience-year">${exp.year}</td>
-                        <td class="experience-description">${exp.description}</td>
-                    </tr>
-                `).join('');
-            }
+            html += previousExperiences.map(exp => `<tr><td class="experience-year">${exp.year}</td><td class="experience-description">${exp.description}</td></tr>`).join('');
 
             experiencesContainer.innerHTML = html;
         }

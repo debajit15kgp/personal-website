@@ -1,0 +1,17 @@
+[
+  {
+    "path": "blogs/reward-hacking.md",
+    "title": "Reward Hacking in PPO: A Visual Guide",
+    "date": "2026-03-09"
+  },
+  {
+    "path": "blogs/rl-for-noobs.json",
+    "title": "RL for noobs",
+    "date": "2024-12-15"
+  },
+  {
+    "path": "blogs/note1.json",
+    "title": "How I built this site",
+    "date": "2024-07-08"
+  }
+]
