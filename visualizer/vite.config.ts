@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Build as a static sub-app that can be deployed under /visualizer/ on the parent site.
+// Built and served under /visualizer/ on debajitchakraborty.com.
+// If you want to host it elsewhere, change `base` to './' for relative URLs.
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/visualizer/',
   build: {
     outDir: 'dist',
     sourcemap: true,
