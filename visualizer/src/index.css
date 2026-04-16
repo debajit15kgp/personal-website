@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+ * Theme — matches the parent site (personal-website/theme.css) so the same
+ * localStorage["theme"] toggle skins both. Defaults to light (cream).
+ * Colors stored as "R G B" triplets for Tailwind's rgb(var(--x) / <alpha>).
+ * ------------------------------------------------------------------------- */
+
+/* LIGHT (default) — warm cream, amber accent */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* ink ramp: 900 = page canvas (darkest bg), 100 = primary text */
+  --ink-900: 254 251 243;   /* #fefbf3 — parent bg-primary */
+  --ink-800: 255 255 255;   /* #ffffff — cards */
+  --ink-700: 250 249 246;   /* #faf9f6 — elevated strips */
+  --ink-600: 229 231 235;   /* #e5e7eb — borders (parent --border) */
+  --ink-500: 209 213 219;   /* #d1d5db — hover borders */
+  --ink-400: 156 163 175;   /* #9ca3af — very faded text */
+  --ink-300: 107 114 128;   /* #6b7280 — secondary text (parent --text-secondary) */
+  --ink-200: 75 85 99;      /* #4b5563 — soft body text */
+  --ink-100: 45 45 45;      /* #2d2d2d — primary text (parent --text-primary) */
+
+  /* "teal" is the primary interactive accent — in light mode it's amber */
+  --accent-teal: 217 119 6;    /* #d97706 — parent --accent */
+  --accent-amber: 180 83 9;    /* #b45309 — deeper amber */
+  --accent-rose: 225 29 72;    /* #e11d48 — rose-600 */
+  --accent-indigo: 79 70 229;  /* #4f46e5 — indigo-600 */
+
+  --diff-add: 21 128 61;       /* #15803d — green-700 for legibility on cream */
+  --diff-remove: 185 28 28;    /* #b91c1c — red-700 */
+
+  --shadow: 0 0 0;              /* shadow with low alpha in light mode */
+}
+
+/* DARK — matches parent dark (#111827 + amber) but tuned for big interactive views */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ink-900: 10 11 16;      /* page canvas */
+  --ink-800: 24 27 36;      /* card */
+  --ink-700: 35 39 52;      /* elevated strip */
+  --ink-600: 45 50 68;      /* border */
+  --ink-500: 58 63 85;      /* hover border */
+  --ink-400: 107 112 128;   /* faded */
+  --ink-300: 158 163 181;   /* muted text */
+  --ink-200: 212 214 223;   /* soft text */
+  --ink-100: 212 214 223;   /* primary text */
+
+  --accent-teal: 94 234 212;   /* keep teal feel in dark */
+  --accent-amber: 245 158 11;  /* parent dark --accent #f59e0b */
+  --accent-rose: 251 113 133;
+  --accent-indigo: 129 140 248;
+
+  --diff-add: 52 211 153;
+  --diff-remove: 248 113 113;
+
+  --shadow: 0 0 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: rgb(var(--ink-900));
+  color: rgb(var(--ink-100));
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+/* React Flow — use vars so the canvas repaints on theme switch */
+.react-flow {
+  background: rgb(var(--ink-900));
+}
+
+.react-flow__edge-path {
+  stroke: rgb(var(--ink-500));
+  stroke-width: 1.5;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: rgb(var(--accent-teal));
+}
+
+.react-flow__controls {
+  background: rgb(var(--ink-800));
+  border: 1px solid rgb(var(--ink-600));
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
+}
+
+.react-flow__controls-button {
+  background: rgb(var(--ink-800));
+  color: rgb(var(--ink-300));
+  border-bottom: 1px solid rgb(var(--ink-600));
+}
+
+.react-flow__controls-button:hover {
+  background: rgb(var(--ink-700));
+  color: rgb(var(--ink-100));
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+.react-flow__minimap {
+  background: rgb(var(--ink-800));
+}
+
+.react-flow__background pattern circle {
+  fill: rgb(var(--ink-500));
+}
+
+/* KaTeX colors follow text */
+.katex {
+  color: rgb(var(--ink-100));
+}
+
+.katex-display {
+  margin: 0.75rem 0 !important;
+}
+
+/* Diff highlight tokens */
+.eq-added {
+  background: rgb(var(--diff-add) / 0.16);
+  border-bottom: 1.5px solid rgb(var(--diff-add));
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.eq-removed {
+  background: rgb(var(--diff-remove) / 0.16);
+  border-bottom: 1.5px solid rgb(var(--diff-remove));
+  padding: 0 2px;
+  border-radius: 2px;
+  text-decoration: line-through;
+  text-decoration-color: rgb(var(--diff-remove) / 0.6);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--ink-900));
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--ink-500));
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--ink-400));
+}
