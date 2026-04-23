@@ -3,40 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TABLE ANALYZE after CTAS - Debajit</title>
+    <title>How does table statistics affect query performance?</title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" type="image/png" href="../icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="blog-common.css">
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-        }
         .container {
-            max-width: 900px;
+            width: min(860px, calc(100% - 2rem));
             margin: 0 auto;
-            padding: 4rem 1.5rem 3rem;
+            padding: 3rem 0 4rem;
         }
-        h1, h2 {
-            color: var(--text-primary);
+
+        .article-head {
+            margin-bottom: 2rem;
+            padding: 1.6rem;
+            border-radius: 1.8rem;
+            background: var(--panel-strong);
+            border: 1px solid var(--border-soft);
+            box-shadow: var(--panel-shadow);
         }
-        p, ul, li {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.7;
+
+        .eyebrow {
+            color: var(--accent-strong);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.72rem;
+        }
+
+        h1 {
+            margin: 0.85rem 0 0;
+            font-family: var(--font-display);
+            font-size: clamp(2.8rem, 7vw, 4.8rem);
+            line-height: 0.94;
+            font-weight: 500;
+            color: var(--headline);
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            color: var(--headline);
+            font-weight: 500;
+            font-size: 2.15rem;
+            margin-top: 2.4rem;
+            line-height: 1;
+        }
+
+        p,
+        ul,
+        li,
+        code {
             color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.9;
         }
+
+        article {
+            padding: 1.7rem;
+            border-radius: 1.8rem;
+            background: var(--panel-strong);
+            border: 1px solid var(--border-soft);
+            box-shadow: var(--panel-shadow);
+        }
+
+        code {
+            padding: 0.12rem 0.35rem;
+            border-radius: 0.4rem;
+            background: rgba(151, 117, 60, 0.08);
+        }
+
         .image-container {
+            margin: 2rem 0;
+            padding: 1.2rem;
+            border-radius: 1.4rem;
+            border: 1px solid var(--border-soft);
+            background: var(--panel-soft);
             text-align: center;
-            margin: 30px 0;
-            border: 1px dashed var(--border);
-            padding: 20px;
         }
     </style>
 </head>
@@ -56,24 +100,29 @@
     <aside id="blog-sidebar" class="blog-sidebar"></aside>
 
     <main class="container">
-        <h1>TABLE ANALYZE after CTAS: 40–50% Faster Queries in Spark and Trino</h1>
-        <p>Recently I noticed something surprisingly impactful: simply running <code>TABLE ANALYZE</code> right after a CTAS (CREATE TABLE AS SELECT) can make subsequent queries on that table <strong>40–50% faster</strong> in both Spark and Trino.</p>
-        <p>CTAS is a common pattern when materializing intermediate results or shipping curated tables to downstream users. The problem is that immediately after CTAS, the table’s statistics are often missing or badly outdated. The query engine has no idea about basic properties like row counts, value distributions, or data skew, so the optimizer falls back to conservative defaults and often picks suboptimal join orders, join strategies, or partition pruning plans.</p>
-        <p><code>TABLE ANALYZE</code> (or the engine-specific equivalent) fills in those statistics. Once the engine has real row counts and column stats, it can choose better join orders, more appropriate shuffle strategies, and smarter filters. In workloads with skew or large joins, this shows up as noticeably faster queries and more predictable runtimes.</p>
-        <div class="image-container">
-            <p>[Add your latency or throughput graph comparing CTAS-only vs CTAS+TABLE ANALYZE here]</p>
-            <div style="margin-top: 10px; font-style: italic;">Figure: Queries run 40–50% faster after collecting table statistics.</div>
-        </div>
-        <h2>When to use this pattern</h2>
-        <ul>
-            <li>You are creating large tables via CTAS that underpin dashboards or critical reports.</li>
-            <li>You see unstable or unexpectedly slow query performance on freshly created tables.</li>
-            <li>Your engine’s query plans show generic cardinality estimates or obviously wrong row counts.</li>
-        </ul>
-        <p>In practice, the pattern is simple: after the CTAS finishes, immediately trigger <code>TABLE ANALYZE</code> on the new table (possibly in an asynchronous job) so that every downstream query benefits. It’s a tiny addition to the pipeline, but in my experiments it consistently delivered 40–50% faster queries on Spark and Trino.</p>
+        <header class="article-head">
+            <div class="eyebrow">Systems note</div>
+            <h1>How does table statistics affect query performance?</h1>
+        </header>
+
+        <article>
+            <p>Recently I noticed something surprisingly impactful: simply running <code>TABLE ANALYZE</code> right after a CTAS (CREATE TABLE AS SELECT) can make subsequent queries on that table <strong>40–50% faster</strong> in both Spark and Trino.</p>
+            <p>CTAS is a common pattern when materializing intermediate results or shipping curated tables to downstream users. The problem is that immediately after CTAS, the table’s statistics are often missing or badly outdated. The query engine has no idea about basic properties like row counts, value distributions, or data skew, so the optimizer falls back to conservative defaults and often picks suboptimal join orders, join strategies, or partition pruning plans.</p>
+            <p><code>TABLE ANALYZE</code> (or the engine-specific equivalent) fills in those statistics. Once the engine has real row counts and column stats, it can choose better join orders, more appropriate shuffle strategies, and smarter filters. In workloads with skew or large joins, this shows up as noticeably faster queries and more predictable runtimes.</p>
+            <div class="image-container">
+                <p>[Add your latency or throughput graph comparing CTAS-only vs CTAS+TABLE ANALYZE here]</p>
+                <div style="margin-top: 10px; font-style: italic;">Figure: Queries run 40–50% faster after collecting table statistics.</div>
+            </div>
+            <h2>When to use this pattern</h2>
+            <ul>
+                <li>You are creating large tables via CTAS that underpin dashboards or critical reports.</li>
+                <li>You see unstable or unexpectedly slow query performance on freshly created tables.</li>
+                <li>Your engine’s query plans show generic cardinality estimates or obviously wrong row counts.</li>
+            </ul>
+            <p>In practice, the pattern is simple: after the CTAS finishes, immediately trigger <code>TABLE ANALYZE</code> on the new table (possibly in an asynchronous job) so that every downstream query benefits. It’s a tiny addition to the pipeline, but in my experiments it consistently delivered 40–50% faster queries on Spark and Trino.</p>
+        </article>
     </main>
     <script src="../theme.js"></script>
     <script src="blogs-list.js"></script>
 </body>
 </html>
-

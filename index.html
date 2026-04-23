@@ -4,608 +4,441 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debajit Chakraborty</title>
-    <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Markdown Parser -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
-        :root {
-            --text-primary: #2d2d2d;
-            --text-secondary: #6b7280;
-            --bg-primary: #fefbf3;
-            --bg-secondary: #faf9f6;
-            --accent: #d97706;
-            --border: #e5e7eb;
-        }
-
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
+        html,
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
+            min-height: 100%;
         }
 
-        .container {
-            display: flex;
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+            color: var(--headline);
+            background: var(--bg-page);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            position: relative;
+        }
+
+        .home {
+            position: relative;
             min-height: 100vh;
+            isolation: isolate;
+            background:
+                linear-gradient(180deg, rgba(249, 236, 199, 0.3), rgba(249, 236, 199, 0.08)),
+                linear-gradient(90deg, rgba(248, 234, 198, 0.9) 0%, rgba(248, 234, 198, 0.7) 25%, rgba(248, 234, 198, 0.08) 58%, rgba(248, 234, 198, 0) 100%),
+                var(--bg-page);
         }
 
-        /* Left Sidebar - Recent Blogs */
-        .blog-sidebar {
-            width: 320px;
-            background-color: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-            padding: 2rem;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: 2px 0 16px rgba(0,0,0,0.05);
+        .background-photo {
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            display: flex;
+            align-items: stretch;
+            justify-content: flex-end;
+            pointer-events: none;
         }
 
-        .blog-sidebar h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 0.5rem;
-        }
-
-        .blog-list {
+        .background-photo img {
             width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            filter: saturate(0.95) contrast(0.95);
         }
 
-        .blog-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            background: var(--bg-card);
-            box-shadow: 0 2px 8px var(--shadow);
+        .home::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(90deg, rgba(248, 234, 198, 0.82) 0%, rgba(248, 234, 198, 0.56) 28%, rgba(248, 234, 198, 0.14) 56%, rgba(248, 234, 198, 0) 78%);
         }
 
-        .blog-table thead {
-            background: var(--bg-secondary);
-            border-bottom: 2px solid var(--border);
-        }
-
-        .blog-table th {
-            padding: 0.6rem 0.8rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            border-right: 1px solid var(--border);
-        }
-
-        .blog-table th:last-child {
-            border-right: none;
-        }
-
-        .blog-table td {
-            padding: 0.6rem 0.8rem;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .blog-table td:last-child {
-            border-right: none;
-        }
-
-        .blog-table tbody tr {
-            transition: background 0.15s;
-            cursor: pointer;
-        }
-
-        .blog-table tbody tr:hover {
-            background: var(--bg-secondary);
-        }
-
-        .blog-title {
-            font-weight: 500;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .blog-date {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        /* Social Media Links */
-        .social-links {
-            margin-top: 2.5rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .social-links h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 0.5rem;
-        }
-
-        .social-link {
+        .topbar {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.5rem;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
+            justify-content: space-between;
+            padding: 3rem 3.8rem 0;
         }
 
-        .social-link:hover {
-            border-color: var(--accent);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-            background-color: var(--bg-secondary);
+        .brand-mark {
+            width: 2.9rem;
+            height: 2.9rem;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            border: 1px solid var(--border-strong);
+            font-size: 1.65rem;
+            line-height: 1;
+            color: var(--headline);
         }
 
-        .social-link svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
+        .topnav {
+            display: flex;
+            align-items: center;
+            gap: 3.2rem;
         }
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 320px;
-            padding: 3rem 4rem;
-            max-width: 1200px;
-        }
-
-        .header {
-            margin-bottom: 3rem;
-        }
-
-        .header h1 {
-            font-size: 3.5rem;
-            font-weight: 300;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-        }
-
-        .header .subtitle {
-            font-size: 1.3rem;
-            color: var(--text-secondary);
+        .topnav a {
+            font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
             font-weight: 400;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-strong);
         }
 
-        .header .intro {
-            font-size: 1.2rem;
-            color: var(--text-primary);
+        .hero {
+            display: flex;
+            align-items: flex-start;
+            min-height: calc(100vh - 7rem);
+            padding: 8.25rem 0 8rem 3.8rem;
+        }
+
+        .hero-copy {
+            max-width: 42rem;
+        }
+
+        .hero-copy h1 {
+            margin: 0;
+            font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: clamp(2.8rem, 4.8vw, 4.2rem);
+            line-height: 0.98;
             font-weight: 400;
-            margin-top: 1rem;
-            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-divider {
+            width: 3.5rem;
+            height: 1px;
+            margin: 2rem 0 1.35rem;
+            background: var(--accent-strong);
+        }
+
+        .hero-copy p {
+            margin: 0;
+            max-width: 34rem;
+            font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--accent-strong);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.4rem;
+            margin-top: 3rem;
+        }
+
+        .hero-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 0.7rem;
+            border-bottom: 1px solid var(--accent-strong);
+            font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+            font-weight: 400;
+            font-size: 0.98rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-strong);
+        }
+
+        .hero-link-arrow {
+            font-size: 1.7rem;
+            line-height: 0.8;
+        }
+
+        .content {
+            width: min(1000px, calc(100% - 7.6rem));
+            margin: 0 auto;
+            padding: 4rem 0 6rem;
+            --section-offset: 252px;
         }
 
         .section {
-            margin-bottom: 3rem;
+            padding: 2.4rem 0 3.4rem;
         }
 
-        .section h2 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 0.5rem;
+        .section-label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-size: 0.8rem;
+            color: var(--accent-strong);
+            margin-left: var(--section-offset);
         }
 
-        .section h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            margin-top: 2rem;
-            color: var(--text-primary);
+        .section-rule {
+            height: 1px;
+            background: rgba(159, 106, 37, 0.35);
+            margin-bottom: 1.35rem;
+            margin-left: var(--section-offset);
+            width: min(42rem, calc(100% - var(--section-offset)));
         }
 
-        /* Experience Sections */
-        .experience-section {
-            margin-bottom: 2.5rem;
+        .section-grid {
+            display: grid;
+            grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+            gap: 2rem;
+            align-items: start;
         }
 
-        .experience-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            background: var(--bg-card);
-            box-shadow: 0 2px 8px var(--shadow);
+        .section-title {
+            font-size: 0.82rem;
+            color: var(--accent-strong);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
-        .experience-table thead {
-            background: var(--bg-secondary);
-            border-bottom: 2px solid var(--border);
-        }
-
-        .experience-table th {
-            padding: 0.8rem 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            border-right: 1px solid var(--border);
-        }
-
-        .experience-table th:last-child {
-            border-right: none;
-        }
-
-        .experience-table td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .experience-table td:last-child {
-            border-right: none;
-        }
-
-        .experience-table tbody tr {
-            transition: background 0.15s;
-        }
-
-        .experience-table tbody tr:hover {
-            background: var(--bg-secondary);
-        }
-
-        .experience-year {
-            font-size: 0.95rem;
-            color: var(--accent);
-            font-weight: 400;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .experience-description {
-            color: var(--text-primary);
+        .section-copy,
+        .project-note,
+        .contact-links a {
+            font-size: 0.84rem;
             line-height: 1.6;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+            color: var(--accent-strong);
         }
 
-        .experience-section-header {
-            font-size: 0.95rem;
-            font-weight: 400;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
+        .section-copy {
+            max-width: 42rem;
         }
 
-        .experience-section-header td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid var(--border);
+        .project-list {
+            display: grid;
+            gap: 2.2rem;
+            max-width: 42rem;
         }
 
-        /* Life Section */
-        .life-section {
-            margin-top: 3rem;
-        }
-
-        .life-section h2 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 0.5rem;
-        }
-
-        .life-content {
-            color: var(--text-primary);
-            line-height: 1.8;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-        }
-
-        /* Blog Section in Main Content */
-        .blog-section {
-            margin-top: 3rem;
-        }
-
-        .blog-section h2 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 0.5rem;
-        }
-
-        #main-blogs-list {
-            width: 100%;
-        }
-
-        .main-blog-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            background: var(--bg-card);
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-
-        .main-blog-table thead {
-            background: var(--bg-secondary);
-            border-bottom: 2px solid var(--border);
-        }
-
-        .main-blog-table th {
-            padding: 0.8rem 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            border-right: 1px solid var(--border);
-        }
-
-        .main-blog-table th:last-child {
-            border-right: none;
-        }
-
-        .main-blog-table td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .main-blog-table td:last-child {
-            border-right: none;
-        }
-
-        .main-blog-table tbody tr {
-            transition: background 0.15s;
+        .project-item {
+            display: block;
             cursor: pointer;
         }
 
-        .main-blog-table tbody tr:hover {
-            background: var(--bg-secondary);
+        .project-name {
+            display: inline-block;
+            font-size: 1.28rem;
+            line-height: 1.2;
+            margin-bottom: 0.35rem;
+            color: var(--headline);
         }
 
-        /* Responsive Design */
-        @media (max-width: 968px) {
-            .blog-sidebar {
-                width: 280px;
+        .project-note {
+            display: block;
+            max-width: 36rem;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem 2rem;
+            max-width: 42rem;
+        }
+
+        .contact-links a {
+            border-bottom: 1px solid rgba(159, 106, 37, 0.35);
+            padding-bottom: 0.15rem;
+        }
+
+        @media (max-width: 960px) {
+            .topbar {
+                padding: 2rem 1.5rem 0;
             }
 
-            .main-content {
-                margin-left: 280px;
-                padding: 2rem 2rem;
+            .topnav {
+                gap: 1.25rem;
+                flex-wrap: wrap;
+                justify-content: flex-end;
             }
 
-            .header h1 {
-                font-size: 2.5rem;
+            .topnav a {
+                font-size: 0.88rem;
+            }
+
+            .hero {
+                min-height: auto;
+                padding: 4.5rem 1.5rem 6rem;
+                align-items: flex-end;
+            }
+
+            .hero-copy {
+                max-width: 30rem;
+            }
+
+            .hero-copy h1 {
+                font-size: clamp(2.3rem, 8vw, 3.2rem);
+            }
+
+            .hero-copy p {
+                max-width: 22rem;
+                font-size: 0.84rem;
+            }
+
+            .content {
+                width: min(100% - 3rem, 1000px);
+                padding-top: 2rem;
+                --section-offset: 0px;
+            }
+
+            .section-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .home::after {
+                background: linear-gradient(180deg, rgba(248, 234, 198, 0.74) 0%, rgba(248, 234, 198, 0.54) 33%, rgba(248, 234, 198, 0.12) 58%, rgba(248, 234, 198, 0) 100%);
             }
         }
 
-        @media (max-width: 768px) {
-            .container {
+        @media (max-width: 680px) {
+            .home {
+                min-height: 100svh;
+            }
+
+            .background-photo img {
+                object-fit: cover;
+                object-position: 64% bottom;
+                opacity: 0.92;
+            }
+
+            .topbar {
                 flex-direction: column;
+                align-items: flex-start;
+                gap: 1.2rem;
             }
 
-            .blog-sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
-                max-height: 300px;
+            .topnav {
+                gap: 1rem 1.25rem;
+                justify-content: flex-start;
             }
 
-            .main-content {
-                margin-left: 0;
-                padding: 2rem 1.5rem;
+            .hero {
+                padding-top: 3.8rem;
             }
 
-            .experience-table {
-                font-size: 0.75rem;
+            .hero-copy p {
+                max-width: 18rem;
             }
 
-            .experience-table th,
-            .experience-table td {
-                padding: 0.6rem 0.8rem;
+            .hero-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
             }
+
+            .content {
+                width: min(100% - 2rem, 1000px);
+            }
+
+            .project-name {
+                font-size: 1.45rem;
+            }
+
         }
     </style>
-    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
-    <button id="theme-toggle" aria-label="Toggle theme"></button>
-    <div class="container">
-        <!-- Left Sidebar - Recent Blogs -->
-        <aside class="blog-sidebar">
-            <h2>Recent Blogs</h2>
-            <div class="blog-list" id="blog-list">
-                <!-- Blogs will be loaded here -->
+    <main class="page">
+        <section class="home">
+            <div class="background-photo" aria-hidden="true">
+                <img src="bg.png" alt="">
             </div>
-            
-            <!-- Social Media Links -->
-            <div class="social-links">
-                <h3>Connect</h3>
-                <a href="https://twitter.com/yourusername" target="_blank" class="social-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                    </svg>
-                    <span>Twitter</span>
-                </a>
-                <a href="https://instagram.com/yourusername" target="_blank" class="social-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                    <span>Instagram</span>
-                </a>
-                <a href="https://github.com/yourusername" target="_blank" class="social-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                    </svg>
-                    <span>GitHub</span>
-                </a>
-                <a href="https://linkedin.com/in/yourusername" target="_blank" class="social-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                        <rect x="2" y="9" width="4" height="12"></rect>
-                        <circle cx="4" cy="4" r="2"></circle>
-                    </svg>
-                    <span>LinkedIn</span>
-                </a>
-                <a href="mailto:your.email@example.com" class="social-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
-                    <span>Email</span>
-                </a>
-            </div>
-        </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="header">
-                <h1></h1>
-                <p class="subtitle">Machine Learning Engineer</p>
-                <p>
-                    I am Debajit Chakraborty, a Masters student studying CS at UT Austin. I am interested in LLMs, reinforcement learning and systems.
-                    Currently I am working on post-training of LLMs. Prior to this, I was fortunate enough to work at McKinsey & Company where I tried to solve some business problems. 
-                    
-                    Link to my <a href="https://drive.google.com/file/d/12MAb2fnK6L5Efyq_UAlN5z8PLqtZWkAi/view?usp=sharing">CV</a>. 
-                    <br></br>Below are some of the things I have been up to
-                </p>
-    </div>
-    
-            <section class="section">
-                <table class="experience-table">
-                    <tbody id="experiences">
-                        <!-- Experiences will be loaded here -->
-                    </tbody>
-                </table>
+            <header class="topbar">
+                <a class="brand-mark" href="index.html" aria-label="Debajit Chakraborty">D</a>
+                <nav class="topnav" aria-label="Primary">
+                    <a href="#work">Work</a>
+                    <a href="#about">About</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+            </header>
+
+            <section class="hero">
+                <div class="hero-copy">
+                    <h1>Debajit<br>Chakraborty</h1>
+                    <div class="hero-divider"></div>
+                    <p>RL researcher focused on systems and reasoning (RLVR)</p>
+                    <div class="hero-actions">
+                        <a class="hero-link" href="#work">
+                            <span>View Work</span>
+                            <span class="hero-link-arrow">→</span>
+                        </a>
+                    </div>
+                </div>
             </section>
+        </section>
 
-            <section class="section life-section">
-                <h2>Life</h2>
-                <div class="life-content" id="life-content">
-                    <p>Add your interests and life description here. You can edit this directly in the HTML file by finding the element with id="life-content" and adding your content inside this div.</p>
+        <div class="content">
+            <section id="about" class="section">
+                <span class="section-label">01 About</span>
+                <div class="section-rule"></div>
+                <div class="section-grid">
+                    <div class="section-title"></div>
+                    <div class="section-copy">
+                        I work on reinforcement learning, systems, and reasoning-heavy training setups. I study computer science at UT Austin, and I worked at Granica on query acceleration.
+                    </div>
                 </div>
             </section>
 
-            <section class="section blog-section">
-                <h2>Blogs</h2>
-                <div id="main-blogs-list">
-                    <!-- Blogs will be loaded here -->
+            <section id="work" class="section">
+                <span class="section-label">02 Writing</span>
+                <div class="section-rule"></div>
+                <div class="section-grid">
+                    <div class="section-title"></div>
+                    <div class="project-list">
+                        <a class="project-item" href="blogs/table-analyze-ctas.html">
+                            <span class="project-name">TABLE ANALYZE after CTAS</span>
+                            <span class="project-note">A short systems note on how collecting table statistics can make Spark and Trino queries 40–50% faster.</span>
+                        </a>
+                        <a class="project-item" href="/visualizer/">
+                            <span class="project-name">RL mental map</span>
+                            <span class="project-note">A beginner-friendly walkthrough of the major reinforcement learning families and how they relate to one another.</span>
+                        </a>
+                        <a class="project-item" href="blog.html">
+                            <span class="project-name">Open full archive</span>
+                            <span class="project-note">Browse all current writing and future notes in the archive.</span>
+                        </a>
+                    </div>
                 </div>
             </section>
-        </main>
-    </div>
-    
-    <script src="theme.js"></script>
-    <script src="blogs/blogs-list.js"></script>
-    <script>
-        // Load and display blogs from registry.json
-        async function loadBlogs() {
-            const blogList = document.getElementById('blog-list');
-            const mainBlogsList = document.getElementById('main-blogs-list');
-            
-            if (!blogList) return;
 
-            let blogs = [];
-            try {
-                const response = await fetch('blogs/registry.json');
-                if (!response.ok) throw new Error('Could not load registry');
-                blogs = await response.json();
-            } catch (error) {
-                const list = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []);
-                blogs = list.map((b) => ({
-                    title: b.title,
-                    date: b.date,
-                    path: `blogs/${b.url}`
-                }));
-            }
-
-            if (blogs.length === 0) {
-                blogList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
-                if (mainBlogsList) mainBlogsList.innerHTML = '<p style="color: var(--text-secondary);">No blogs available yet.</p>';
-                return;
-            }
-
-            const sorted = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-            const getBlogUrl = (path) => {
-                if (typeof path !== 'string') return 'blog.html';
-                return path.endsWith('.html')
-                    ? path
-                    : `blog.html?post=${encodeURIComponent(path)}`;
-            };
-
-            const tableHtml = (isMain) => `
-                <table class="${isMain ? 'main-blog-table' : 'blog-table'}">
-                    <thead>
-                        <tr>
-                                <th style="width: 55%;">Title</th>
-                                <th style="width: 45%;">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sorted.map(blog => `
-                            <tr onclick="window.location.href='${getBlogUrl(blog.path)}'">
-                                <td class="blog-title">${blog.title}</td>
-                                <td class="blog-date">${new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-
-            blogList.innerHTML = tableHtml(false);
-            if (mainBlogsList) mainBlogsList.innerHTML = tableHtml(true);
-        }
-
-        function loadExperiences() {
-            const currentExperiences = [
-                { year: '2025', description: 'Add your description here' }
-            ];
-            const previousExperiences = [
-                { year: '2024', description: 'Graduate Research Assistant at The University of Texas at Austin. Worked with Dr. Aditya Akella and Dr. Sanjay Shakkotai on solving problems in using learned representations of network state. Research at the intersection of reinforcement learning and networked systems.' },
-                { year: '2022-2024', description: 'Business Analyst, Digital at McKinsey & Company. Built 40 mil$ pipeline for 10+ medtech & life sciences target clients. Estimated INR 130cr+ technical debt accrued by 150+ legacy applications. Conducted application owner workshops to analyze system infrastructure, integrations, legacy code, and security.' },
-                { year: '2022-2024', description: 'Backend Developer at Goldcast. Implemented new scheduling techniques for service requests and setup monitoring, alerting for AWS infrastructure. Leveraged Django to build and scale back-end; implemented IaaC (Terraform) to migrate resources without breaking changes.' },
-                { year: '2021', description: 'Quantitative Researcher Intern at Quadeye Securities. Built robust models which predicted price movement to generate buy-sell triggers for novel aggressive intraday-trading strategy. Used event-driven architecture to aggregate data trends and tracked various market activities through Limit Order Book.' }
-            ];
-
-            const experiencesContainer = document.getElementById('experiences');
-            let html = '<tr class="experience-section-header"><td colspan="2">Currently</td></tr>';
-            
-            html += currentExperiences.map(exp => `<tr><td class="experience-year">${exp.year}</td><td class="experience-description">${exp.description}</td></tr>`).join('');
-            html += '<tr class="experience-section-header"><td colspan="2">Previously</td></tr>';
-            html += previousExperiences.map(exp => `<tr><td class="experience-year">${exp.year}</td><td class="experience-description">${exp.description}</td></tr>`).join('');
-
-            experiencesContainer.innerHTML = html;
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadBlogs();
-            loadExperiences();
-        });
-    </script>
+            <section id="contact" class="section">
+                <span class="section-label">03 Contact</span>
+                <div class="section-rule"></div>
+                <div class="section-grid">
+                    <div class="section-title">Reach out</div>
+                    <div class="contact-links">
+                        <a href="mailto:debajit15kgp@gmail.com">Email</a>
+                        <a href="https://github.com/debajit15kgp" target="_blank" rel="noreferrer">GitHub</a>
+                        <a href="https://drive.google.com/file/d/12MAb2fnK6L5Efyq_UAlN5z8PLqtZWkAi/view?usp=sharing" target="_blank" rel="noreferrer">Resume</a>
+                        <a href="blog.html">Blog</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
 </body>
 </html>

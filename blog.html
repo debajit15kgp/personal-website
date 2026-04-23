@@ -3,266 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - Debajit</title>
+    <title>Writing - Debajit Chakraborty</title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
-    <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             min-height: 100vh;
-            background: var(--bg-primary);
+            font-family: var(--font-sans);
             color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 248, 222, 0.84), transparent 35%),
+                linear-gradient(180deg, var(--bg-page), var(--bg-surface));
         }
-        #back-btn {
-            position: fixed;
-            top: 8px;
-            left: 22px;
-            width: 36px;
-            height: 36px;
-            background: none;
-            border: none;
-            border-radius: 50%;
+
+        a {
+            color: inherit;
+        }
+
+        .shell {
+            width: min(1140px, calc(100% - 2rem));
+            margin: 0 auto;
+            padding: 1.5rem 0 4rem;
+        }
+
+        .topbar {
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 20;
-            cursor: pointer;
-            transition: background 0.18s;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
-        #back-btn:hover {
-            background: var(--bg-hover);
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.9rem 1.15rem;
+            border-radius: 999px;
+            text-decoration: none;
+            color: var(--accent-strong);
+            background: var(--panel-soft);
+            border: 1px solid var(--border-soft);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-size: 0.72rem;
         }
-        #back-btn svg {
-            width: 22px;
-            height: 22px;
-            stroke: var(--text-primary);
-            stroke-width: 2.5;
-            fill: none;
+
+        #theme-toggle {
+            position: static;
         }
-        .container {
-            display: flex;
-            width: 100vw;
-            min-height: 100vh;
-        }
-        /* Left Sidebar */
-        .sidebar {
-            width: 280px;
-            background: var(--bg-secondary);
-            border-right: 1.5px solid var(--border);
-            padding: 2rem 1.5rem;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: 2px 0 16px rgba(0,0,0,0.03);
-        }
-        /* Main Content - Table Layout */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            padding: 2rem 3rem;
-            overflow-x: auto;
-        }
-        .main-content h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 1.5rem;
+            align-items: stretch;
             margin-bottom: 1.5rem;
-            color: var(--text-primary);
         }
-        .blogs-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            background: var(--bg-card);
-            box-shadow: 0 2px 8px var(--shadow);
+
+        .hero-copy,
+        .hero-panel {
+            padding: 1.6rem;
+            border-radius: 1.8rem;
+            border: 1px solid var(--border-soft);
+            box-shadow: var(--panel-shadow);
         }
-        .blogs-table thead {
-            background: var(--bg-secondary);
-            border-bottom: 2px solid var(--border);
+
+        .hero-copy {
+            background: var(--panel-strong);
         }
-        .blogs-table th {
-            padding: 0.8rem 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            border-right: 1px solid var(--border);
+
+        .hero-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 23rem;
+            background:
+                linear-gradient(0deg, rgba(59, 39, 20, 0.2), rgba(59, 39, 20, 0.02)),
+                linear-gradient(145deg, rgba(247, 234, 201, 0.95), rgba(218, 178, 114, 0.58)),
+                url("photos/golden-gate-hero.png") center/cover no-repeat;
+            color: #fff8eb;
         }
-        .blogs-table th:last-child {
-            border-right: none;
+
+        .eyebrow {
+            color: var(--accent-strong);
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            font-size: 0.72rem;
         }
-        .blogs-table td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            color: var(--text-muted);
-            font-family: 'Inter', sans-serif;
-        }
-        .blogs-table td:last-child {
-            border-right: none;
-        }
-        .blogs-table tbody tr {
-            transition: background 0.15s;
-            cursor: pointer;
-        }
-        .blogs-table tbody tr:hover {
-            background: var(--bg-secondary);
-        }
-        .blog-title {
+
+        .hero h1 {
+            margin: 0.8rem 0 0;
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 7vw, 5.4rem);
+            line-height: 0.92;
             font-weight: 500;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
+            color: var(--headline);
         }
-        .blog-date {
+
+        .hero-copy p,
+        .hero-panel p {
+            margin: 1rem 0 0;
+            color: var(--text-muted);
+            line-height: 1.85;
+            font-size: 1rem;
+        }
+
+        .hero-panel p {
+            max-width: 24rem;
+            color: rgba(255, 248, 235, 0.92);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .sidebar,
+        .archive {
+            padding: 1.5rem;
+            border-radius: 1.6rem;
+            border: 1px solid var(--border-soft);
+            background: var(--panel-strong);
+            box-shadow: var(--panel-shadow);
+        }
+
+        .sidebar h2,
+        .archive h2 {
+            margin: 0;
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 500;
+            color: var(--headline);
+        }
+
+        .sidebar p,
+        .archive-intro {
             color: var(--text-secondary);
-            font-size: 0.8rem;
+            line-height: 1.8;
         }
-        .blog-preview {
-            color: var(--text-secondary);
-            max-width: 500px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+
+        .sidebar-list {
+            display: grid;
+            gap: 0.85rem;
+            margin-top: 1.2rem;
         }
+
+        .sidebar-link,
+        .archive-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border-soft);
+            background: var(--panel-soft);
+            border-radius: 1.2rem;
+            padding: 1rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .sidebar-link:hover,
+        .archive-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-strong);
+        }
+
+        .archive-list {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .card-date {
+            color: var(--accent-strong);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.7rem;
+        }
+
+        .card-title {
+            margin: 0.65rem 0 0;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            line-height: 0.98;
+            font-weight: 500;
+            color: var(--headline);
+        }
+
+        .card-preview {
+            margin: 0.8rem 0 0;
+            color: var(--text-muted);
+            line-height: 1.75;
+        }
+
+        .card-cta {
+            margin-top: 1rem;
+            color: var(--accent-strong);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-size: 0.72rem;
+        }
+
         .blog-content {
             display: none;
-            margin-top: 2rem;
-            padding: 2rem;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 1.5rem;
+            padding: 1.6rem;
+            border-radius: 1.6rem;
+            border: 1px solid var(--border-soft);
+            background: var(--panel-strong);
+            box-shadow: var(--panel-shadow);
         }
+
         .blog-content.active {
             display: block;
         }
+
         .blog-content h2 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
+            margin: 0;
+            font-family: var(--font-display);
+            font-size: 2.7rem;
+            line-height: 0.95;
+            color: var(--headline);
+            font-weight: 500;
         }
-        .blog-content .blog-date {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-        }
-        .blog-content .content-body {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            line-height: 1.6;
+
+        .content-body {
+            margin-top: 1rem;
             color: var(--text-muted);
+            line-height: 1.9;
         }
-        .blog-content .content-body p {
-            margin-bottom: 1rem;
+
+        .content-body h2,
+        .content-body h3,
+        .content-body h4 {
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            font-family: var(--font-display);
+            color: var(--headline);
+            line-height: 1.05;
+            font-weight: 500;
         }
-        .blog-content .content-body img {
+
+        .content-body p,
+        .content-body ul,
+        .content-body ol,
+        .content-body blockquote {
+            margin: 0 0 1rem;
+        }
+
+        .content-body img {
+            width: 100%;
             max-width: 100%;
             height: auto;
-            display: block;
-            margin: 20px auto;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 1.2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 20px 42px rgba(80, 56, 24, 0.14);
         }
+
         .close-content {
             float: right;
             background: none;
             border: none;
-            font-size: 1.5rem;
             color: var(--text-secondary);
+            font-size: 1.6rem;
             cursor: pointer;
-            padding: 0;
-            line-height: 1;
-            transition: color 0.2s;
         }
-        .close-content:hover {
-            color: var(--text-primary);
-        }
-        @media (max-width: 968px) {
-            .sidebar {
-                width: 240px;
-            }
-            .main-content {
-                margin-left: 240px;
-                padding: 1.5rem 2rem;
+
+        @media (max-width: 900px) {
+            .hero,
+            .layout {
+                grid-template-columns: 1fr;
             }
         }
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
+
+        @media (max-width: 640px) {
+            .shell {
+                width: min(100% - 1rem, 1140px);
             }
-            .sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
-                max-height: none;
-            }
-            .main-content {
-                margin-left: 0;
-                padding: 1.5rem 1rem;
-            }
-            .blogs-table {
-                font-size: 0.75rem;
-            }
-            .blogs-table th,
-            .blogs-table td {
-                padding: 0.6rem 0.8rem;
+
+            .topbar {
+                flex-wrap: wrap;
             }
         }
     </style>
 </head>
 <body>
-    <button id="theme-toggle" aria-label="Toggle theme"></button>
-    <button id="back-btn" onclick="window.location.href='index.html'" aria-label="Back">
-        <svg viewBox="0 0 24 24">
-            <path d="M15 5l-7 7 7 7"/>
-        </svg>
-        </button>
-    
-    <div class="container">
-        <!-- Left Sidebar (currently empty, no social links) -->
-        <aside class="sidebar"></aside>
-        
-        <!-- Main Content -->
-        <main class="main-content">
-            <h1>Blog Posts</h1>
-            <table class="blogs-table">
-                <thead>
-                    <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 45%;">Title</th>
-                        <th style="width: 20%;">Date</th>
-                        <th style="width: 35%;">Preview</th>
-                    </tr>
-                </thead>
-                <tbody id="blogs-tbody">
-                    <!-- Blogs will be loaded here -->
-                </tbody>
-            </table>
-            <div id="blog-content" class="blog-content">
-                <!-- Blog content will be displayed here -->
+    <main class="shell">
+        <div class="topbar">
+            <a class="back-link" href="index.html">Back Home</a>
+            <button id="theme-toggle" aria-label="Toggle theme"></button>
+        </div>
+
+        <section class="hero">
+            <div class="hero-copy">
+                <div class="eyebrow">Writing archive</div>
+                <h1>Ideas worth slowing down for.</h1>
+                <p>
+                    The homepage now hints at your writing; this page lets it breathe. The tone stays warm and cinematic, while the structure makes room for technical depth and future essays.
+                </p>
             </div>
-        </main>
-    </div>
-    
+            <div class="hero-panel">
+                <div class="eyebrow" style="color: rgba(255,248,235,0.88);">Latest notes</div>
+                <p>
+                    Posts on reinforcement learning, query systems, and the practical details that make research useful once it becomes infrastructure.
+                </p>
+            </div>
+        </section>
+
+        <section class="layout">
+            <aside class="sidebar">
+                <h2>Browse</h2>
+                <p>Quick links for readers who want to jump straight into a post.</p>
+                <div id="sidebar-list" class="sidebar-list"></div>
+            </aside>
+
+            <section class="archive">
+                <h2>All posts</h2>
+                <p class="archive-intro">Newest writing first, with enough context to understand what each piece is trying to unpack.</p>
+                <div id="archive-list" class="archive-list"></div>
+                <div id="blog-content" class="blog-content"></div>
+            </section>
+        </section>
+    </main>
+
     <script src="theme.js"></script>
     <script src="blogs/blogs-list.js"></script>
     <script>
-        // Simple frontmatter parser
         function parseFrontmatter(text) {
             const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
             const match = text.match(frontmatterRegex);
             if (!match) return { attributes: {}, body: text };
             const attributes = {};
-            const yamlBlock = match[1];
-            const body = match[2];
-            yamlBlock.split('\n').forEach(line => {
+            match[1].split('\n').forEach((line) => {
                 const parts = line.split(':');
                 if (parts.length >= 2) {
                     const key = parts[0].trim();
@@ -270,14 +353,36 @@
                     attributes[key] = value;
                 }
             });
-            return { attributes, body };
+            return { attributes, body: match[2] };
         }
 
         function isHtmlPath(path) {
             return typeof path === 'string' && path.endsWith('.html');
         }
 
-        // Load a single blog content
+        function blogHref(path) {
+            return isHtmlPath(path) ? path : `blog.html?post=${encodeURIComponent(path)}`;
+        }
+
+        function previewFromTitle(title) {
+            const lower = title.toLowerCase();
+            if (lower.includes('table analyze') || lower.includes('query performance')) {
+                return 'Why one small statistics step after CTAS can change optimizer behavior in Spark and Trino.';
+            }
+            if (lower.includes('reinforcement learning') || lower.includes('rl')) {
+                return 'A beginner-oriented pass through model-based, model-free, on-policy, and off-policy RL.';
+            }
+            return 'Technical writing on machine learning, systems, and the craft around them.';
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
         async function fetchBlogContent(path) {
             if (isHtmlPath(path)) {
                 window.location.href = path;
@@ -287,11 +392,12 @@
             try {
                 const response = await fetch(path);
                 if (!response.ok) throw new Error('Could not load blog');
-                
+
                 if (path.endsWith('.json')) {
-                    const data = await response.json();
-                    return data;
-                } else if (path.endsWith('.md')) {
+                    return await response.json();
+                }
+
+                if (path.endsWith('.md')) {
                     const text = await response.text();
                     const { attributes, body } = parseFrontmatter(text);
                     return {
@@ -302,112 +408,92 @@
                 }
             } catch (error) {
                 console.error('Error fetching blog:', error);
-                return null;
             }
+
+            return null;
         }
 
-        // Format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-        }
-
-        // Render blogs table
-        async function renderBlogsTable() {
-            const tbody = document.getElementById('blogs-tbody');
-            if (!tbody) return;
-
+        async function renderArchive() {
+            const sidebar = document.getElementById('sidebar-list');
+            const archive = document.getElementById('archive-list');
             let blogs = [];
+
             try {
                 const response = await fetch('blogs/registry.json');
                 if (!response.ok) throw new Error('Could not load registry');
                 blogs = await response.json();
             } catch (error) {
-                // Fallback to BLOG_LIST for older deployments or file://
-                const list = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []);
-                blogs = list.map((b) => ({
-                    title: b.title,
-                    date: b.date,
-                    path: `blogs/${b.url}`
+                blogs = (typeof BLOG_LIST !== 'undefined' ? BLOG_LIST : []).map((blog) => ({
+                    title: blog.title,
+                    date: blog.date,
+                    path: `blogs/${blog.url}`
                 }));
             }
 
-            if (!blogs.length) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No blogs available yet.</td></tr>';
+            const sorted = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (!sorted.length) {
+                archive.innerHTML = '<p class="archive-intro">No blogs available yet.</p>';
                 return;
             }
 
-            const sorted = [...blogs].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            tbody.innerHTML = sorted.map((blog, index) => {
-                const onClick = isHtmlPath(blog.path)
-                    ? `window.location.href='${blog.path}'`
-                    : `showBlogContent('${blog.path}')`;
-                return `
-                    <tr onclick="${onClick}">
-                        <td>${index + 1}</td>
-                        <td class="blog-title">${blog.title}</td>
-                        <td class="blog-date">${formatDate(blog.date)}</td>
-                        <td class="blog-preview">Click to read...</td>
-                    </tr>
-                `;
-            }).join('');
+            sidebar.innerHTML = sorted.map((blog) => `
+                <a class="sidebar-link" href="${blogHref(blog.path)}">
+                    <div class="card-date">${formatDate(blog.date)}</div>
+                    <div style="margin-top:0.45rem;">${blog.title}</div>
+                </a>
+            `).join('');
 
-            // Check for URL parameter to load a specific blog
+            archive.innerHTML = sorted.map((blog) => `
+                <a class="archive-card" href="${blogHref(blog.path)}">
+                    <div class="card-date">${formatDate(blog.date)}</div>
+                    <h3 class="card-title">${blog.title}</h3>
+                    <p class="card-preview">${previewFromTitle(blog.title)}</p>
+                    <div class="card-cta">${isHtmlPath(blog.path) ? 'Open article' : 'Read inline or open'}</div>
+                </a>
+            `).join('');
+
             const urlParams = new URLSearchParams(window.location.search);
             const postPath = urlParams.get('post');
-            if (postPath) {
-                if (isHtmlPath(postPath)) {
-                    window.location.href = postPath;
-                } else {
-                    showBlogContent(postPath);
-                }
+            if (postPath && !isHtmlPath(postPath)) {
+                showBlogContent(postPath);
             }
         }
 
-        // Show blog content
         async function showBlogContent(path) {
             const blog = await fetchBlogContent(path);
             if (!blog) return;
 
             const contentDiv = document.getElementById('blog-content');
             contentDiv.innerHTML = `
-                <button class="close-content" onclick="closeBlogContent()">&times;</button>
+                <button class="close-content" onclick="closeBlogContent()" aria-label="Close article">&times;</button>
+                <div class="card-date">${formatDate(blog.date)}</div>
                 <h2>${blog.title}</h2>
-                <div class="blog-date">${formatDate(blog.date)}</div>
                 <div class="content-body">${blog.content}</div>
             `;
-            
             contentDiv.classList.add('active');
             contentDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            
-            // Update URL without reloading
-            const newUrl = window.location.pathname + '?post=' + encodeURIComponent(path);
+
+            const newUrl = `${window.location.pathname}?post=${encodeURIComponent(path)}`;
             window.history.pushState({ path: newUrl }, '', newUrl);
         }
-        
-        // Close blog content
+
         function closeBlogContent() {
             const contentDiv = document.getElementById('blog-content');
             contentDiv.classList.remove('active');
-            // Remove URL parameter
             window.history.pushState({}, '', window.location.pathname);
         }
-        
-        // Escape key to close
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
                 const contentDiv = document.getElementById('blog-content');
                 if (contentDiv.classList.contains('active')) {
                     closeBlogContent();
-                } else {
-                    window.location.href = 'index.html';
                 }
             }
         });
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', renderBlogsTable);
+
+        document.addEventListener('DOMContentLoaded', renderArchive);
     </script>
 </body>
 </html>

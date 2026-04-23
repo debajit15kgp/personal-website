@@ -1,57 +1,40 @@
-@import url('../theme.css');
+@import url("../theme.css");
 
-#back-btn {
-    width: 36px;
-    height: 36px;
-    background: none;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: background 0.18s;
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    background:
+        radial-gradient(circle at top left, rgba(255, 248, 222, 0.84), transparent 34%),
+        linear-gradient(180deg, var(--bg-page), var(--bg-surface));
 }
-#back-btn:hover {
-    background: var(--bg-hover);
+
+a {
+    color: var(--accent-strong);
 }
-#back-btn svg {
-    width: 22px;
-    height: 22px;
-    stroke: var(--text-primary);
-    stroke-width: 2.5;
-    fill: none;
-}
-.blog-nav {
-    position: fixed;
-    top: 8px;
-    left: 22px;
-    right: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 20;
-}
-.blog-nav .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+
+#back-btn,
 #blog-toggle {
-    width: 36px;
-    height: 36px;
-    background: none;
-    border: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--border-soft);
     border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background 0.18s;
+    transition: background 0.18s ease, border-color 0.18s ease;
 }
+
+#back-btn:hover,
 #blog-toggle:hover {
     background: var(--bg-hover);
+    border-color: var(--border-strong);
 }
+
+#back-btn svg,
 #blog-toggle svg {
     width: 20px;
     height: 20px;
@@ -59,60 +42,105 @@
     stroke-width: 2;
     fill: none;
 }
+
+.blog-nav {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.2rem;
+    z-index: 25;
+    backdrop-filter: blur(18px);
+    background: rgba(248, 238, 214, 0.66);
+    border-bottom: 1px solid rgba(151, 117, 60, 0.12);
+}
+
+[data-theme="dark"] .blog-nav {
+    background: rgba(28, 24, 20, 0.72);
+}
+
+.blog-nav .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+#theme-toggle {
+    position: static;
+}
+
 .blog-sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 280px;
-    max-width: 85vw;
+    width: 300px;
+    max-width: 88vw;
     height: 100vh;
-    background: var(--bg-secondary);
-    border-right: 1.5px solid var(--border);
-    padding: 3rem 1.5rem 2rem;
-    box-shadow: 4px 0 20px var(--shadow);
-    z-index: 25;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
+    padding: 5rem 1.25rem 1.5rem;
+    background: rgba(249, 242, 226, 0.92);
+    border-right: 1px solid var(--border-soft);
+    box-shadow: 0 24px 50px rgba(54, 39, 20, 0.14);
     overflow-y: auto;
+    transform: translateX(-102%);
+    transition: transform 0.25s ease;
+    z-index: 30;
 }
+
+[data-theme="dark"] .blog-sidebar {
+    background: rgba(30, 24, 18, 0.95);
+}
+
 .blog-sidebar.open {
     transform: translateX(0);
 }
+
 .blog-sidebar h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
+    margin: 0 0 1rem;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--headline);
 }
+
 .blog-sidebar ul {
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.8rem;
 }
+
 .blog-sidebar li {
-    margin-bottom: 0.5rem;
+    margin: 0;
 }
+
 .blog-sidebar a {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-decoration: none;
     display: block;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid transparent;
+    padding: 0.9rem 1rem;
+    border-radius: 1rem;
+    text-decoration: none;
+    color: var(--text-muted);
+    background: var(--panel-soft);
+    border: 1px solid rgba(151, 117, 60, 0.12);
+    line-height: 1.5;
 }
+
 .blog-sidebar a:hover {
     color: var(--text-primary);
+    border-color: var(--border-strong);
 }
+
 .blog-sidebar-overlay {
     position: fixed;
     inset: 0;
     background: var(--overlay);
-    z-index: 24;
+    z-index: 29;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
 }
+
 .blog-sidebar-overlay.open {
     opacity: 1;
     pointer-events: auto;

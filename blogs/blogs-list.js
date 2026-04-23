@@ -1,5 +1,5 @@
 const BLOG_LIST = [
-    { title: 'TABLE ANALYZE after CTAS: 40–50% Faster Queries in Spark and Trino', date: '2026-03-02', url: 'table-analyze-ctas.html' },
+    { title: 'How does table statistics affect query performance?', date: '2026-03-02', url: 'table-analyze-ctas.html' },
     { title: 'RL for noobs', date: '2024-12-15', url: 'rl-for-noobs.html' }
 ];
 
