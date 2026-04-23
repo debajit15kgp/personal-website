@@ -28,6 +28,7 @@ for item in \
   blog.html \
   theme.css \
   theme.js \
+  bg.png \
   santaclara.jpg \
   icon.png \
   favicon.ico \
